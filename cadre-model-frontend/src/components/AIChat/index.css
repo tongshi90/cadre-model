@@ -1,0 +1,326 @@
+/* 悬浮按钮容器 */
+.ai-chat-float-button-wrapper {
+  position: fixed;
+  right: 30px;
+  bottom: 30px;
+  width: 64px;
+  height: 64px;
+  z-index: 1001;
+}
+
+/* 脉冲波纹效果 */
+.ai-chat-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(212, 175, 55, 0.3);
+  animation: pulse-ring 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  pointer-events: none;
+}
+
+.ai-chat-pulse-1 {
+  animation-delay: 0s;
+}
+
+.ai-chat-pulse-2 {
+  animation-delay: 0.6s;
+}
+
+.ai-chat-pulse-3 {
+  animation-delay: 1.2s;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
+}
+
+/* 悬浮按钮 */
+.ai-chat-float-button {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.95) 0%, rgba(180, 140, 40, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4),
+              0 2px 8px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.ai-chat-float-button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.ai-chat-float-button:hover::before {
+  opacity: 1;
+}
+
+.ai-chat-float-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 12px 48px rgba(212, 175, 55, 0.5),
+              0 4px 16px rgba(0, 0, 0, 0.4),
+              inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.ai-chat-float-button:active {
+  transform: scale(0.95);
+}
+
+/* 打开状态 */
+.ai-chat-float-button.ai-chat-open {
+  background: linear-gradient(135deg, rgba(248, 113, 113, 0.95) 0%, rgba(220, 38, 38, 0.95) 100%);
+  box-shadow: 0 8px 32px rgba(248, 113, 113, 0.4),
+              0 2px 8px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 图标样式 */
+.ai-chat-icon {
+  font-size: 24px;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.ai-chat-icon-main {
+  font-size: 26px;
+  animation: icon-breathe 2s ease-in-out infinite;
+}
+
+@keyframes icon-breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.ai-chat-float-button:hover .ai-chat-icon-main {
+  animation: icon-breathe-hover 1s ease-in-out infinite;
+}
+
+@keyframes icon-breathe-hover {
+  0%, 100% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+/* 声波动画 */
+.ai-chat-wave {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 12px;
+}
+
+.ai-chat-wave-bar {
+  width: 3px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 2px;
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+.ai-chat-wave-bar:nth-child(1) {
+  height: 4px;
+  animation-delay: 0s;
+}
+
+.ai-chat-wave-bar:nth-child(2) {
+  height: 8px;
+  animation-delay: 0.2s;
+}
+
+.ai-chat-wave-bar:nth-child(3) {
+  height: 6px;
+  animation-delay: 0.4s;
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.8);
+  }
+}
+
+.ai-chat-float-button:hover .ai-chat-wave-bar {
+  animation: wave-hover 0.8s ease-in-out infinite;
+}
+
+@keyframes wave-hover {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(2.2);
+  }
+}
+
+/* 对话框 */
+.ai-chat-modal {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 110px;
+  width: 80vw;
+  height: 80vh;
+  max-width: 1400px;
+  background: rgba(19, 23, 41, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+              0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(30px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* 对话框头部 */
+.ai-chat-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(212, 175, 55, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ai-chat-modal-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-chat-title-icon {
+  font-size: 18px;
+  color: #d4af37;
+  animation: title-icon-pulse 2s ease-in-out infinite;
+}
+
+@keyframes title-icon-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+.ai-chat-modal-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #d4af37;
+}
+
+.ai-chat-modal-close {
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.ai-chat-modal-close:hover {
+  color: rgba(255, 255, 255, 1);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* 对话框内容区 */
+.ai-chat-modal-content {
+  flex: 1;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.ai-chat-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .ai-chat-float-button-wrapper {
+    width: 56px;
+    height: 56px;
+    right: 20px;
+    bottom: 20px;
+  }
+
+  .ai-chat-icon-main {
+    font-size: 22px;
+  }
+
+  .ai-chat-wave {
+    bottom: 6px;
+    height: 10px;
+    gap: 2px;
+  }
+
+  .ai-chat-wave-bar {
+    width: 2px;
+  }
+
+  .ai-chat-modal {
+    width: 95vw;
+    height: 85vh;
+    bottom: 90px;
+  }
+}

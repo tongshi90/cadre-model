@@ -1,0 +1,847 @@
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { Card, Descriptions, Button, Space, Tabs, Table, Modal, Form, Input, DatePicker, Select, InputNumber, Popconfirm, message, Row, Col } from 'antd';
+import { ArrowLeftOutlined, PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { cadreApi } from '@/services/api';
+import type { CadreBasicInfo } from '@/types';
+import dayjs from 'dayjs';
+import { ABILITY_DIMENSION_LIST, getTagsByDimension } from '@/utils/abilityConstants';
+import { TRAIT_TYPE_LIST, getTraitValues, TRAITS_CONFIG } from '@/utils/traitConstants';
+import ReactECharts from 'echarts-for-react';
+import './Detail.css';
+
+const { TextArea } = Input;
+
+const CadreDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<CadreBasicInfo | null>(null);
+  const [activeTab, setActiveTab] = useState('1');
+  const [fromMatch, setFromMatch] = useState(false); // 是否来自匹配分析页面
+
+  // 培训记录相关
+  const [trainingModalVisible, setTrainingModalVisible] = useState(false);
+  const [trainingData, setTrainingData] = useState<any[]>([]);
+  const [editingTraining, setEditingTraining] = useState<any>(null);
+  const [trainingForm] = Form.useForm();
+
+  // 项目经历相关
+  const [projectModalVisible, setProjectModalVisible] = useState(false);
+  const [projectData, setProjectData] = useState<any[]>([]);
+  const [editingProject, setEditingProject] = useState<any>(null);
+  const [projectForm] = Form.useForm();
+
+  // 能力评分相关
+  const [abilityData, setAbilityData] = useState<any[]>([]);
+  const [abilityForm] = Form.useForm();
+  const [abilitySubmitting, setAbilitySubmitting] = useState(false);
+  const [abilityModalVisible, setAbilityModalVisible] = useState(false);
+
+  // 特质分析相关
+  const [traitData, setTraitData] = useState<any[]>([]);
+  const [traitForm] = Form.useForm();
+  const [traitSubmitting, setTraitSubmitting] = useState(false);
+  const [traitModalVisible, setTraitModalVisible] = useState(false);
+
+  const fetchData = async () => {
+    if (!id) return;
+    setLoading(true);
+    try {
+      const response = await cadreApi.getDetail(Number(id));
+      setData(response.data.data || null);
+    } catch (error) {
+      console.error('Failed to fetch cadre detail:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+    if (id) fetchTrainingData();
+
+    // 检查是否从匹配分析页面跳转过来
+    if (location.state?.fromMatch) {
+      setFromMatch(true);
+    }
+  }, [id]);
+
+  // 培训记录相关函数
+  const fetchTrainingData = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info?info_type=1`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      setTrainingData(result.data || []);
+    } catch (error) {
+      console.error('Failed to fetch training data:', error);
+    }
+  };
+
+  const handleTrainingAdd = () => {
+    setEditingTraining(null);
+    trainingForm.resetFields();
+    setTrainingModalVisible(true);
+  };
+
+  const handleTrainingEdit = (record: any) => {
+    setEditingTraining(record);
+    trainingForm.setFieldsValue({
+      ...record,
+      training_date: record.training_date ? dayjs(record.training_date) : undefined,
+    });
+    setTrainingModalVisible(true);
+  };
+
+  const handleTrainingDelete = async (recordId: number) => {
+    try {
+      await fetch(`http://localhost:5000/api/cadres/dynamic-info/${recordId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      message.success('删除成功');
+      fetchTrainingData();
+    } catch (error) {
+      message.error('删除失败');
+      console.error('Failed to delete training:', error);
+    }
+  };
+
+  const handleTrainingSubmit = async () => {
+    try {
+      const values = await trainingForm.validateFields();
+      const submitData = {
+        info_type: 1,
+        training_name: values.training_name,
+        training_date: values.training_date ? values.training_date.format('YYYY-MM-DD') : null,
+        training_content: values.training_content,
+        training_result: values.training_result,
+      };
+
+      if (editingTraining) {
+        await fetch(`http://localhost:5000/api/cadres/dynamic-info/${editingTraining.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(submitData),
+        });
+      } else {
+        await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(submitData),
+        });
+      }
+      message.success(editingTraining ? '更新成功' : '创建成功');
+      setTrainingModalVisible(false);
+      fetchTrainingData();
+    } catch (error) {
+      message.error('保存失败');
+      console.error('Failed to save training:', error);
+    }
+  };
+
+  const trainingColumns = [
+    { title: '培训名称', dataIndex: 'training_name', key: 'training_name' },
+    { title: '培训日期', dataIndex: 'training_date', key: 'training_date' },
+    { title: '培训内容', dataIndex: 'training_content', key: 'training_content', ellipsis: true },
+    { title: '培训结果', dataIndex: 'training_result', key: 'training_result' },
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      render: (_: any, record: any) => (
+        <Space size="small">
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleTrainingEdit(record)}>编辑</Button>
+          <Popconfirm title="确定删除？" onConfirm={() => handleTrainingDelete(record.id)} okText="确定" cancelText="取消">
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  // 项目经历相关函数
+  const fetchProjectData = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info?info_type=2`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      setProjectData(result.data || []);
+    } catch (error) {
+      console.error('Failed to fetch project data:', error);
+    }
+  };
+
+  const handleProjectAdd = () => {
+    setEditingProject(null);
+    projectForm.resetFields();
+    setProjectModalVisible(true);
+  };
+
+  const handleProjectEdit = (record: any) => {
+    setEditingProject(record);
+    projectForm.setFieldsValue({
+      ...record,
+      project_start_date: record.project_start_date ? dayjs(record.project_start_date) : undefined,
+      project_end_date: record.project_end_date ? dayjs(record.project_end_date) : undefined,
+    });
+    setProjectModalVisible(true);
+  };
+
+  const handleProjectDelete = async (recordId: number) => {
+    try {
+      await fetch(`http://localhost:5000/api/cadres/dynamic-info/${recordId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      message.success('删除成功');
+      fetchProjectData();
+    } catch (error) {
+      message.error('删除失败');
+      console.error('Failed to delete project:', error);
+    }
+  };
+
+  const handleProjectSubmit = async () => {
+    try {
+      const values = await projectForm.validateFields();
+      const submitData = {
+        info_type: 2,
+        project_no: values.project_no,
+        project_name: values.project_name,
+        project_role: values.project_role,
+        project_start_date: values.project_start_date ? values.project_start_date.format('YYYY-MM-DD') : null,
+        project_end_date: values.project_end_date ? values.project_end_date.format('YYYY-MM-DD') : null,
+        project_result: values.project_result,
+        project_rating: values.project_rating,
+      };
+
+      if (editingProject) {
+        await fetch(`http://localhost:5000/api/cadres/dynamic-info/${editingProject.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(submitData),
+        });
+      } else {
+        await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+          body: JSON.stringify(submitData),
+        });
+      }
+      message.success(editingProject ? '更新成功' : '创建成功');
+      setProjectModalVisible(false);
+      fetchProjectData();
+    } catch (error) {
+      message.error('保存失败');
+      console.error('Failed to save project:', error);
+    }
+  };
+
+  const projectColumns = [
+    { title: '项目编号', dataIndex: 'project_no', key: 'project_no' },
+    { title: '项目名称', dataIndex: 'project_name', key: 'project_name' },
+    { title: '项目角色', dataIndex: 'project_role', key: 'project_role' },
+    { title: '开始时间', dataIndex: 'project_start_date', key: 'project_start_date' },
+    { title: '结束时间', dataIndex: 'project_end_date', key: 'project_end_date' },
+    { title: '项目评级', dataIndex: 'project_rating', key: 'project_rating' },
+    {
+      title: '操作',
+      key: 'action',
+      width: 150,
+      render: (_: any, record: any) => (
+        <Space size="small">
+          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => handleProjectEdit(record)}>编辑</Button>
+          <Popconfirm title="确定删除？" onConfirm={() => handleProjectDelete(record.id)} okText="确定" cancelText="取消">
+            <Button type="link" size="small" danger icon={<DeleteOutlined />}>删除</Button>
+          </Popconfirm>
+        </Space>
+      ),
+    },
+  ];
+
+  // 能力评分相关函数
+  const fetchAbilityData = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/cadres/${id}/abilities`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      const abilities = result.data || [];
+      setAbilityData(abilities);
+    } catch (error) {
+      console.error('Failed to fetch ability data:', error);
+    }
+  };
+
+  const handleAbilityEdit = () => {
+    // 回填表单数据
+    const formData: any = {};
+    abilityData.forEach((item: any) => {
+      const key = `${item.ability_dimension}_${item.ability_tag}`;
+      formData[key] = {
+        score: item.score,
+        comment: item.comment || '',
+      };
+    });
+    abilityForm.setFieldsValue(formData);
+    setAbilityModalVisible(true);
+  };
+
+  const handleAbilitySubmit = async () => {
+    if (!id) return;
+    setAbilitySubmitting(true);
+    try {
+      const values = await abilityForm.validateFields();
+
+      // 验证所有字段都已填写
+      const unfilledFields: string[] = [];
+      ABILITY_DIMENSION_LIST.forEach((dimension) => {
+        const tags = getTagsByDimension(dimension);
+        tags.forEach((tag) => {
+          const key = `${dimension}_${tag}`;
+          const fieldValue = values[key];
+          if (!fieldValue || !fieldValue.score) {
+            unfilledFields.push(`${dimension}-${tag}`);
+          }
+        });
+      });
+
+      if (unfilledFields.length > 0) {
+        message.error(`以下字段未填写评分：${unfilledFields.join('、')}`);
+        setAbilitySubmitting(false);
+        return;
+      }
+
+      // 构建提交数据
+      const abilities: any[] = [];
+      Object.entries(values).forEach(([key, value]: [string, any]) => {
+        if (value && value.score) {
+          const [dimension, tag] = key.split('_');
+          abilities.push({
+            ability_dimension: dimension,
+            ability_tag: tag,
+            score: value.score,
+            comment: value.comment || '',
+          });
+        }
+      });
+
+      await fetch(`http://localhost:5000/api/cadres/${id}/abilities`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ abilities }),
+      });
+      message.success('保存成功');
+      setAbilityModalVisible(false);
+      fetchAbilityData();
+    } catch (error) {
+      message.error('保存失败');
+      console.error('Failed to save ability:', error);
+    } finally {
+      setAbilitySubmitting(false);
+    }
+  };
+
+  // 生成能力雷达图配置
+  const getAbilityRadarOption = () => {
+    // 计算每个维度的平均分
+    const dimensionScores: any = {};
+    ABILITY_DIMENSION_LIST.forEach((dimension) => {
+      const tags = getTagsByDimension(dimension);
+      let totalScore = 0;
+      let count = 0;
+      tags.forEach((tag) => {
+        const found = abilityData.find(
+          (item: any) => item.ability_dimension === dimension && item.ability_tag === tag
+        );
+        if (found) {
+          totalScore += found.score;
+          count++;
+        }
+      });
+      dimensionScores[dimension] = count > 0 ? (totalScore / count).toFixed(1) : 0;
+    });
+
+    return {
+      tooltip: {
+        trigger: 'item'
+      },
+      radar: {
+        indicator: ABILITY_DIMENSION_LIST.map(dimension => ({
+          name: dimension,
+          max: 5
+        })),
+        radius: 120
+      },
+      series: [
+        {
+          name: '能力评分',
+          type: 'radar',
+          data: [
+            {
+              value: ABILITY_DIMENSION_LIST.map(dimension => parseFloat(dimensionScores[dimension])),
+              name: '能力评分'
+            }
+          ],
+          areaStyle: {
+            color: 'rgba(24, 144, 255, 0.2)'
+          },
+          lineStyle: {
+            color: '#1890ff'
+          },
+          itemStyle: {
+            color: '#1890ff'
+          }
+        }
+      ]
+    };
+  };
+
+  // 特质分析相关函数
+  const fetchTraitData = async () => {
+    if (!id) return;
+    try {
+      const response = await fetch(`http://localhost:5000/api/cadres/${id}/traits`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const result = await response.json();
+      const traits = result.data || [];
+
+      // 回填表单数据
+      const formData: any = {};
+      traits.forEach((item: any) => {
+        formData[item.trait_type] = item.trait_value;
+      });
+      traitForm.setFieldsValue(formData);
+      setTraitData(traits);
+    } catch (error) {
+      console.error('Failed to fetch trait data:', error);
+    }
+  };
+
+  const handleTraitEdit = () => {
+    setTraitModalVisible(true);
+  };
+
+  const handleTraitSubmit = async () => {
+    if (!id) return;
+    setTraitSubmitting(true);
+    try {
+      const values = await traitForm.validateFields();
+
+      // 验证所有字段都已填写
+      const unfilledTypes: string[] = [];
+      TRAIT_TYPE_LIST.forEach((typeConfig) => {
+        if (!values[typeConfig.value]) {
+          unfilledTypes.push(typeConfig.label);
+        }
+      });
+
+      if (unfilledTypes.length > 0) {
+        message.error(`以下特质类型未选择：${unfilledTypes.join('、')}`);
+        setTraitSubmitting(false);
+        return;
+      }
+
+      // 构建提交数据
+      const traits: any[] = [];
+      Object.entries(values).forEach(([traitType, traitValue]: [string, any]) => {
+        if (traitValue) {
+          traits.push({
+            trait_type: traitType,
+            trait_value: traitValue,
+          });
+        }
+      });
+
+      await fetch(`http://localhost:5000/api/cadres/${id}/traits`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+        body: JSON.stringify({ traits }),
+      });
+      message.success('保存成功');
+      setTraitModalVisible(false);
+      fetchTraitData();
+    } catch (error) {
+      message.error('保存失败');
+      console.error('Failed to save trait:', error);
+    } finally {
+      setTraitSubmitting(false);
+    }
+  };
+
+  if (!data) {
+    return <div>加载中...</div>;
+  }
+
+  return (
+    <div style={{ padding: '16px', height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ marginBottom: 12 }}>
+        <Button
+          icon={<ArrowLeftOutlined />}
+          onClick={() => {
+            if (fromMatch) {
+              // 如果是从匹配分析页面跳转过来的，返回到匹配分析页面
+              navigate('/match');
+            } else {
+              // 否则返回上一页
+              navigate(-1);
+            }
+          }}
+        >
+          返回
+        </Button>
+      </div>
+
+      <Row gutter={16} style={{ flex: 1, minHeight: 0 }}>
+        <Col span={8} style={{ minHeight: 0 }}>
+          <Card title="干部基本信息" loading={loading} style={{ height: '100%', overflow: 'auto' }} bodyStyle={{ padding: '16px' }}>
+            <Descriptions column={1} size="small" bordered>
+              <Descriptions.Item label="工号">{data.employee_no}</Descriptions.Item>
+              <Descriptions.Item label="姓名">{data.name}</Descriptions.Item>
+              <Descriptions.Item label="性别">{data.gender || '-'}</Descriptions.Item>
+              <Descriptions.Item label="年龄">{data.age || '-'}</Descriptions.Item>
+              <Descriptions.Item label="出生日期">{data.birth_date || '-'}</Descriptions.Item>
+              <Descriptions.Item label="入职日期">{data.entry_date || '-'}</Descriptions.Item>
+              <Descriptions.Item label="籍贯">{data.native_place || '-'}</Descriptions.Item>
+              <Descriptions.Item label="学历">{data.education || '-'}</Descriptions.Item>
+              <Descriptions.Item label="专业">{data.major || '-'}</Descriptions.Item>
+              <Descriptions.Item label="政治面貌">{data.political_status || '-'}</Descriptions.Item>
+              <Descriptions.Item label="部门">{data.department?.name || '-'}</Descriptions.Item>
+              <Descriptions.Item label="资格证书">{data.qualifications || '-'}</Descriptions.Item>
+              <Descriptions.Item label="备注">{data.remark || '-'}</Descriptions.Item>
+            </Descriptions>
+          </Card>
+        </Col>
+
+        <Col span={16} style={{ minHeight: 0 }}>
+          <Card title="更多信息" style={{ height: '100%', display: 'flex', flexDirection: 'column' }} bodyStyle={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <Tabs
+              activeKey={activeTab}
+              onChange={(key) => {
+                setActiveTab(key);
+                if (key === '1') fetchTrainingData();
+                if (key === '2') fetchProjectData();
+                if (key === '3') fetchAbilityData();
+                if (key === '4') fetchTraitData();
+              }}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+              items={[
+                {
+                  key: '1',
+                  label: '培训记录',
+                  children: (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button type="primary" onClick={handleTrainingAdd}>
+                          添加培训记录
+                        </Button>
+                      </div>
+                      <Table columns={trainingColumns} dataSource={trainingData} rowKey="id" pagination={false} size="small" scroll={{ y: 'calc(100vh - 300px)' }} />
+                    </div>
+                  ),
+                },
+                {
+                  key: '2',
+                  label: '项目经历',
+                  children: (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                      <div style={{ marginBottom: 12, display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button type="primary" onClick={handleProjectAdd}>
+                          添加项目经历
+                        </Button>
+                      </div>
+                      <Table columns={projectColumns} dataSource={projectData} rowKey="id" pagination={false} size="small" scroll={{ y: 'calc(100vh - 300px)' }} />
+                    </div>
+                  ),
+                },
+                {
+                  key: '3',
+                  label: '能力评分',
+                  children: (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                        <Button type="primary" onClick={handleAbilityEdit}>
+                          设置能力评分
+                        </Button>
+                      </div>
+                      {abilityData.length > 0 ? (
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: 'auto' }}>
+                          <ReactECharts option={getAbilityRadarOption()} style={{ width: '500px', height: '400px' }} />
+                        </div>
+                      ) : (
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#999' }}>
+                          暂无能力评分数据，请点击"设置能力评分"按钮进行设置
+                        </div>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: '4',
+                  label: '特质分析',
+                  children: (
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                        <Button type="primary" onClick={handleTraitEdit}>
+                          设置特质分析
+                        </Button>
+                      </div>
+                      {traitData.length > 0 ? (
+                        <div style={{ flex: 1, overflow: 'auto', padding: '8px 0' }}>
+                          {TRAIT_TYPE_LIST.map((typeConfig) => {
+                            const trait = traitData.find((t: any) => t.trait_type === typeConfig.value);
+                            return (
+                              <div key={typeConfig.value} style={{ marginBottom: 12, padding: '10px', background: '#fafafa', borderRadius: 4 }}>
+                                <div style={{ fontWeight: 'bold', marginBottom: 6, fontSize: '14px' }}>{typeConfig.label}</div>
+                                <div style={{ color: '#666', fontSize: '13px' }}>
+                                  {trait ? (
+                                    <>
+                                      <span style={{ marginRight: 12 }}>{trait.trait_value}</span>
+                                      <span style={{ color: '#999' }}>
+                                        ({TRAITS_CONFIG[typeConfig.value]?.values[trait.trait_value] || ''})
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <span style={{ color: '#999' }}>未设置</span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#999' }}>
+                          暂无特质分析数据，请点击"设置特质分析"按钮进行设置
+                        </div>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 培训记录Modal */}
+      <Modal
+        title={editingTraining ? '编辑培训记录' : '新增培训记录'}
+        open={trainingModalVisible}
+        onCancel={() => {
+          setTrainingModalVisible(false);
+          trainingForm.resetFields();
+        }}
+        onOk={handleTrainingSubmit}
+        width={600}
+      >
+        <Form form={trainingForm} layout="vertical">
+          <Form.Item label="培训名称" name="training_name" rules={[{ required: true, message: '请输入培训名称' }]}>
+            <Input placeholder="请输入培训名称" />
+          </Form.Item>
+          <Form.Item label="培训日期" name="training_date">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="培训内容" name="training_content">
+            <TextArea rows={3} placeholder="请输入培训内容" />
+          </Form.Item>
+          <Form.Item label="培训结果" name="training_result">
+            <Input placeholder="请输入培训结果" />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 项目经历Modal */}
+      <Modal
+        title={editingProject ? '编辑项目经历' : '新增项目经历'}
+        open={projectModalVisible}
+        onCancel={() => {
+          setProjectModalVisible(false);
+          projectForm.resetFields();
+        }}
+        onOk={handleProjectSubmit}
+        width={700}
+      >
+        <Form form={projectForm} layout="vertical">
+          <Form.Item label="项目编号" name="project_no">
+            <Input placeholder="请输入项目编号" />
+          </Form.Item>
+          <Form.Item label="项目名称" name="project_name" rules={[{ required: true, message: '请输入项目名称' }]}>
+            <Input placeholder="请输入项目名称" />
+          </Form.Item>
+          <Form.Item label="项目角色" name="project_role">
+            <Input placeholder="请输入项目角色" />
+          </Form.Item>
+          <Form.Item label="开始时间" name="project_start_date">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="结束时间" name="project_end_date">
+            <DatePicker style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item label="项目结果" name="project_result">
+            <TextArea rows={2} placeholder="请输入项目结果" />
+          </Form.Item>
+          <Form.Item label="项目评级" name="project_rating">
+            <Select placeholder="请选择项目评级" options={[
+              { label: '优秀', value: '优秀' },
+              { label: '良好', value: '良好' },
+              { label: '合格', value: '合格' },
+              { label: '待改进', value: '待改进' },
+            ]} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* 能力评分设置Modal */}
+      <Modal
+        title="设置能力评分"
+        open={abilityModalVisible}
+        onCancel={() => {
+          setAbilityModalVisible(false);
+          abilityForm.resetFields();
+        }}
+        onOk={handleAbilitySubmit}
+        width={900}
+        okText="保存"
+        confirmLoading={abilitySubmitting}
+        styles={{ body: { paddingTop: 16 } }}
+      >
+        <Form form={abilityForm} layout="vertical">
+          <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #f0f0f0' }}>
+            <thead>
+              <tr style={{ background: '#fafafa', borderBottom: '1px solid #f0f0f0' }}>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, width: '150px' }}>能力维度</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, width: '150px' }}>能力标签</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600, width: '100px' }}>评分</th>
+                <th style={{ padding: '8px 12px', textAlign: 'left', fontWeight: 600 }}>评语</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ABILITY_DIMENSION_LIST.map((dimension, dimIndex) => {
+                const tags = getTagsByDimension(dimension);
+                const firstRow = true;
+                return tags.map((tag, tagIndex) => {
+                  const fieldName = `${dimension}_${tag}`;
+                  const isFirstTag = tagIndex === 0;
+                  return (
+                    <tr key={tag} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      {isFirstTag && (
+                        <td
+                          rowSpan={tags.length}
+                          style={{
+                            padding: '6px 12px',
+                            borderRight: '1px solid #f0f0f0',
+                            background: '#fafafa',
+                            verticalAlign: 'top',
+                            fontWeight: 500
+                          }}
+                        >
+                          {dimension}
+                        </td>
+                      )}
+                      <td style={{ padding: '6px 12px', borderRight: '1px solid #f0f0f0' }}>
+                        {tag}
+                      </td>
+                      <td style={{ padding: '6px 12px', borderRight: '1px solid #f0f0f0' }}>
+                        <Form.Item
+                          name={[fieldName, 'score']}
+                          rules={[{ required: true, message: '必填' }]}
+                          style={{ margin: 0 }}
+                        >
+                          <InputNumber min={1} max={5} step={0.1} placeholder="1-5" style={{ width: '100%' }} />
+                        </Form.Item>
+                      </td>
+                      <td style={{ padding: '6px 12px' }}>
+                        <Form.Item
+                          name={[fieldName, 'comment']}
+                          style={{ margin: 0 }}
+                        >
+                          <Input placeholder="请输入评语" />
+                        </Form.Item>
+                      </td>
+                    </tr>
+                  );
+                });
+              })}
+            </tbody>
+          </table>
+        </Form>
+      </Modal>
+
+      {/* 特质分析设置Modal */}
+      <Modal
+        title="设置特质分析"
+        open={traitModalVisible}
+        onCancel={() => {
+          setTraitModalVisible(false);
+        }}
+        onOk={handleTraitSubmit}
+        width={600}
+        okText="保存"
+        confirmLoading={traitSubmitting}
+        styles={{ body: { paddingTop: 16 } }}
+      >
+        <Form form={traitForm} layout="vertical">
+          {TRAIT_TYPE_LIST.map((typeConfig) => (
+            <Form.Item
+              key={typeConfig.value}
+              name={typeConfig.value}
+              label={typeConfig.label}
+              rules={[{ required: true, message: `请选择${typeConfig.label}` }]}
+              style={{ marginBottom: 16 }}
+            >
+              <Select placeholder={`请选择${typeConfig.label}`}>
+                {getTraitValues(typeConfig.value).map((item) => (
+                  <Select.Option key={item.value} value={item.value}>
+                    {item.display}
+                  </Select.Option>
+                ))}
+              </Select>
+            </Form.Item>
+          ))}
+        </Form>
+      </Modal>
+
+    </div>
+  );
+};
+
+export default CadreDetail;

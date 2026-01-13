@@ -1,0 +1,113 @@
+/**
+ * 玻璃态卡片组件样式
+ */
+
+.glass-card {
+  position: relative;
+  background: var(--color-glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+  padding: var(--spacing-6);
+  transition: all var(--duration-normal) var(--easing-default);
+  overflow: hidden;
+}
+
+/* 玻璃态卡片悬停效果 */
+.glass-card-hover {
+  cursor: default;
+}
+
+.glass-card-hover:hover {
+  background: var(--color-glass-surface-light);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: var(--shadow-glow-gold);
+  transform: translateY(-2px);
+}
+
+/* 玻璃态卡片发光效果 */
+.glass-card-glow {
+  box-shadow: var(--shadow-glow-gold), var(--shadow-glass);
+}
+
+/* 玻璃态卡片渐变边框 */
+.glass-card-gradient {
+  position: relative;
+}
+
+.glass-card-gradient::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 1px;
+  background: linear-gradient(135deg,
+    rgba(212, 175, 55, 0.5) 0%,
+    rgba(96, 165, 250, 0.3) 50%,
+    rgba(212, 175, 55, 0.5) 100%);
+  background-size: 200% 200%;
+  animation: borderDance 3s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* 可点击的卡片 */
+.glass-card-clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.glass-card-clickable:active {
+  transform: scale(0.98);
+}
+
+/* 内部光泽效果 */
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  transition: left var(--duration-slower) var(--easing-default);
+}
+
+.glass-card-hover:hover::after,
+.glass-card-clickable:hover::after {
+  left: 150%;
+}
+
+/* 装饰性角落 */
+.glass-card .decorative-corners {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--easing-default);
+}
+
+.glass-card-hover:hover .decorative-corners,
+.glass-card-gradient .decorative-corners {
+  opacity: 1;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .glass-card {
+    padding: var(--spacing-4);
+    border-radius: var(--radius-lg);
+  }
+}

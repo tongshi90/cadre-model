@@ -1,0 +1,504 @@
+/**
+ * 干部全量模型平台 - 全局样式
+ * 包含动画、背景效果和工具类
+ */
+
+/* 导入设计系统 */
+@import './design-system.css';
+
+/* 导入 Ant Design 主题覆盖 */
+@import './antd-overrides.css';
+
+/* 导入字体 */
+@import '@fontsource/cinzel/index.css';
+@import '@fontsource/jetbrains-mono/index.css';
+@import '@fontsource/noto-sans-sc/index.css';
+
+/* ============================================
+   动画关键帧
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--color-accent-gold),
+                0 0 10px var(--color-accent-gold),
+                0 0 15px var(--color-accent-gold);
+  }
+  50% {
+    box-shadow: 0 0 10px var(--color-accent-gold),
+                0 0 20px var(--color-accent-gold),
+                0 0 30px var(--color-accent-gold);
+  }
+}
+
+@keyframes borderDance {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================
+   动画工具类
+   ============================================ */
+
+.animate-fadeIn {
+  animation: fadeIn var(--duration-normal) var(--easing-out);
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp var(--duration-slow) var(--easing-out);
+}
+
+.animate-fadeInDown {
+  animation: fadeInDown var(--duration-slow) var(--easing-out);
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft var(--duration-slow) var(--easing-out);
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight var(--duration-slow) var(--easing-out);
+}
+
+.animate-scaleIn {
+  animation: scaleIn var(--duration-slow) var(--easing-out);
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft var(--duration-slow) var(--easing-out);
+}
+
+.animate-slideInRight {
+  animation: slideInRight var(--duration-slow) var(--easing-out);
+}
+
+.animate-pulse {
+  animation: pulse 2s var(--easing-default) infinite;
+}
+
+.animate-float {
+  animation: float 3s var(--easing-default) infinite;
+}
+
+.animate-glow {
+  animation: glow 2s var(--easing-default) infinite;
+}
+
+/* 延迟工具类 */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }
+.animation-delay-600 { animation-delay: 600ms; }
+.animation-delay-700 { animation-delay: 700ms; }
+.animation-delay-800 { animation-delay: 800ms; }
+
+/* ============================================
+   背景效果
+   ============================================ */
+
+/* 网格背景 */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--color-glass-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-glass-border) 1px, transparent 1px);
+  background-size: 50px 50px;
+  background-position: center center;
+}
+
+.bg-grid-dense {
+  background-image:
+    linear-gradient(var(--color-glass-border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-glass-border) 1px, transparent 1px);
+  background-size: 25px 25px;
+  background-position: center center;
+}
+
+/* 点阵背景 */
+.bg-dots {
+  background-image: radial-gradient(var(--color-glass-border) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 渐变背景 */
+.bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.bg-gradient-midnight {
+  background: var(--gradient-midnight);
+}
+
+.bg-gradient-aurora {
+  background: var(--gradient-aurora);
+}
+
+/* 噪点纹理 */
+.bg-noise {
+  position: relative;
+}
+
+.bg-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* ============================================
+   渐变边框效果
+   ============================================ */
+
+.gradient-border {
+  position: relative;
+  background: var(--color-glass-surface);
+  border-radius: var(--radius-xl);
+}
+
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xl);
+  padding: 1px;
+  background: linear-gradient(135deg,
+    var(--color-accent-gold) 0%,
+    var(--color-info) 50%,
+    var(--color-accent-gold) 100%);
+  background-size: 200% 200%;
+  animation: borderDance 3s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================
+   玻璃态组件样式
+   ============================================ */
+
+.glass-panel {
+  background: var(--color-glass-surface);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glass);
+}
+
+.glass-panel-hover {
+  transition: all var(--duration-normal) var(--easing-default);
+}
+
+.glass-panel-hover:hover {
+  background: var(--color-glass-surface-light);
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: var(--shadow-glow-gold);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   光晕效果
+   ============================================ */
+
+.glow-spot {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.glow-spot-gold {
+  background: var(--color-accent-gold);
+}
+
+.glow-spot-blue {
+  background: var(--color-info);
+}
+
+/* ============================================
+   装饰元素
+   ============================================ */
+
+.decorative-line {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--color-accent-gold) 50%,
+    transparent 100%);
+}
+
+.decorative-corner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--color-accent-gold);
+  opacity: 0.5;
+}
+
+.decorative-corner-tl {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+.decorative-corner-tr {
+  top: 0;
+  right: 0;
+  border-left: none;
+  border-bottom: none;
+}
+
+.decorative-corner-bl {
+  bottom: 0;
+  left: 0;
+  border-right: none;
+  border-top: none;
+}
+
+.decorative-corner-br {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* ============================================
+   卡片布局
+   ============================================ */
+
+.card-stack {
+  position: relative;
+}
+
+.card-stack > *:not(:first-child) {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform: translate(var(--spacing-2), var(--spacing-2));
+}
+
+.card-overlap {
+  margin-top: calc(var(--spacing-8) * -1);
+}
+
+.card-overlap > * {
+  margin-top: var(--spacing-8);
+}
+
+/* ============================================
+   悬停效果
+   ============================================ */
+
+.hover-lift {
+  transition: transform var(--duration-normal) var(--easing-default);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.hover-scale {
+  transition: transform var(--duration-normal) var(--easing-default);
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+}
+
+.hover-glow {
+  transition: box-shadow var(--duration-normal) var(--easing-default);
+}
+
+.hover-glow:hover {
+  box-shadow: var(--shadow-glow-gold);
+}
+
+/* ============================================
+   响应式工具
+   ============================================ */
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+  }
+
+  .hide-mobile {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none;
+  }
+}
+
+/* ============================================
+   打印样式
+   ============================================ */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* ============================================
+   可访问性
+   ============================================ */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 减少动画（用户偏好设置） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

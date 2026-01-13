@@ -1,0 +1,240 @@
+/**
+ * 干部质量画像组件样式
+ */
+
+.quality-portrait-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 统计卡片网格 */
+.quality-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.quality-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.quality-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.quality-stat-card.star {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.quality-stat-card.potential {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.quality-stat-card.stable {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.quality-stat-card.adjust {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.1) 0%, rgba(100, 116, 139, 0.05) 100%);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.quality-stat-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.quality-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.quality-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-primary);
+}
+
+.quality-stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.quality-stat-desc {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+/* 图表网格 */
+.quality-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.quality-chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.quality-chart-card:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.quality-chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quality-chart-content {
+  position: relative;
+}
+
+/* 干部列表 */
+.quality-cadres-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.quality-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quality-cadres-table {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quality-table-header,
+.quality-table-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1.2fr 1.5fr 1.5fr 1fr 1fr 1fr 1.2fr;
+  gap: 12px;
+  padding: 10px 14px;
+  align-items: center;
+}
+
+.quality-table-header {
+  background: rgba(212, 175, 55, 0.1);
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--color-accent-gold);
+}
+
+.quality-table-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.quality-table-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(212, 175, 55, 0.2);
+  transform: translateX(4px);
+}
+
+.quality-table-cell {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.cadre-name {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.score-value {
+  font-weight: 600;
+  font-family: var(--font-mono, monospace);
+}
+
+.score-value.high {
+  color: #22c55e;
+}
+
+.score-value.medium {
+  color: #f59e0b;
+}
+
+.score-value.low {
+  color: #ef4444;
+}
+
+.quality-type-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+}
+
+.quality-table-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .quality-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .quality-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .quality-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .quality-table-header,
+  .quality-table-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .quality-table-cell {
+    font-size: 11px;
+  }
+}

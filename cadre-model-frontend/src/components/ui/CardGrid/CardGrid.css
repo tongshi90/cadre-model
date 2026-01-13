@@ -1,0 +1,13 @@
+/**
+ * CardGrid 组件样式
+ */
+
+.card-grid {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

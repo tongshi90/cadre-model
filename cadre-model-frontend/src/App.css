@@ -1,0 +1,31 @@
+/**
+ * App 布局样式 - 顶部导航栏版本
+ */
+
+.app-container {
+  position: relative;
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+}
+
+.app-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 主内容区域 - 顶部有72px的导航栏 */
+.app-main {
+  position: relative;
+  z-index: 1;
+  padding-top: 72px;
+  min-height: 100vh;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .app-main {
+    padding-top: 64px;
+  }
+}

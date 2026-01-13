@@ -1,0 +1,177 @@
+/**
+ * 岗位表单页面样式 - 深色主题
+ */
+
+.position-form-page {
+  min-height: 100vh;
+  padding: 32px;
+  background: var(--color-bg-primary);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.loading-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  color: var(--color-text-tertiary);
+  font-size: 16px;
+}
+
+.form-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 800px;
+}
+
+.form-card .ant-card-head {
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-card .ant-card-head-title {
+  color: var(--color-text-primary);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.form-card .ant-card-body {
+  padding: 32px;
+}
+
+/* Form Item 样式 */
+.form-card .ant-form-item-label > label {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-card .ant-input,
+.form-card .ant-input-number,
+.form-card .ant-select-selector {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+.form-card .ant-input-number-input {
+  color: var(--color-text-primary);
+}
+
+.form-card .ant-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.form-card .ant-input:hover,
+.form-card .ant-input-number:hover,
+.form-card .ant-select-selector:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.form-card .ant-input:focus,
+.form-card .ant-input-number:focus,
+.form-card .ant-select-focused .ant-select-selector {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+/* Select 下拉选项 */
+.form-card .ant-select-dropdown {
+  background: rgba(20, 20, 30, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.form-card .ant-select-item {
+  color: var(--color-text-primary);
+}
+
+.form-card .ant-select-item-option-selected {
+  background: rgba(212, 175, 55, 0.15);
+  color: var(--color-accent-gold);
+}
+
+.form-card .ant-select-item-option-active {
+  background: rgba(212, 175, 55, 0.1);
+}
+
+/* InputNumber */
+.form-card .ant-input-number-handler-wrap {
+  background: rgba(255, 255, 255, 0.03);
+  border-left-color: rgba(255, 255, 255, 0.1);
+}
+
+.form-card .ant-input-number-handler {
+  color: var(--color-text-secondary);
+}
+
+.form-card .ant-input-number-handler:hover {
+  color: var(--color-accent-gold);
+}
+
+.form-card .ant-input-number-handler:active {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+/* TextArea */
+.form-card .ant-input-textarea-show-count::after {
+  color: var(--color-text-tertiary);
+}
+
+/* 按钮样式 */
+.form-card .ant-btn {
+  height: 40px;
+  padding: 0 24px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.form-card .ant-btn-primary {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%);
+  border: none;
+  color: var(--color-bg-primary);
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.form-card .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.form-card .ant-btn-default {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--color-text-primary);
+}
+
+.form-card .ant-btn-default:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+/* 错误提示 */
+.form-card .ant-form-item-explain-error {
+  color: var(--color-error);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .position-form-page {
+    padding: 20px 16px;
+  }
+
+  .form-page-title {
+    font-size: 24px;
+  }
+
+  .form-card .ant-card-body {
+    padding: 20px 16px;
+  }
+}

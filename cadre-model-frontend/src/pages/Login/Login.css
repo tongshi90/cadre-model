@@ -1,0 +1,312 @@
+/**
+ * Login 页面样式
+ */
+
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-8);
+  background: var(--color-bg-primary);
+  overflow: hidden;
+}
+
+/* 背景效果 */
+.login-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.login-background .bg-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.3;
+}
+
+/* 浮动光球 */
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-accent-gold) 0%, transparent 70%);
+  opacity: 0.15;
+  filter: blur(40px);
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-orb.orb-1 {
+  width: 200px;
+  height: 200px;
+  top: 20%;
+  left: 15%;
+  animation-delay: 0s;
+}
+
+.floating-orb.orb-2 {
+  width: 150px;
+  height: 150px;
+  bottom: 30%;
+  right: 20%;
+  animation-delay: 2s;
+}
+
+.floating-orb.orb-3 {
+  width: 100px;
+  height: 100px;
+  top: 60%;
+  left: 30%;
+  animation-delay: 4s;
+}
+
+/* 登录容器 */
+.login-container {
+  position: relative;
+  z-index: 1;
+  animation: scaleIn var(--duration-slow) var(--easing-out);
+}
+
+/* 登录卡片 */
+.login-card {
+  position: relative;
+  width: 420px;
+  max-width: 100%;
+  background: var(--color-glass-surface);
+  backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-2xl);
+  padding: var(--spacing-12) var(--spacing-10);
+  box-shadow: var(--shadow-2xl), var(--shadow-glow-gold);
+  overflow: hidden;
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(212, 175, 55, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Logo 区域 */
+.login-logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
+  margin-bottom: var(--spacing-8);
+  position: relative;
+  z-index: 1;
+}
+
+.logo-icon {
+  width: 72px;
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent-gold);
+  background: var(--color-glass-surface);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-glow-gold);
+  animation: glow 3s ease-in-out infinite;
+}
+
+.logo-icon svg {
+  width: 42px;
+  height: 42px;
+}
+
+.login-title {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent-gold);
+  margin: 0;
+  letter-spacing: 6px;
+  text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+.login-subtitle {
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  color: var(--color-text-tertiary);
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+/* 装饰线 */
+.login-divider {
+  margin-bottom: var(--spacing-8);
+  position: relative;
+  z-index: 1;
+}
+
+.divider-line {
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--color-accent-gold) 30%,
+    var(--color-accent-gold) 70%,
+    transparent 100%);
+  opacity: 0.5;
+}
+
+/* 表单容器 */
+.login-form-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* 表单标签 */
+.form-label {
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+  font-size: var(--text-sm);
+}
+
+/* 输入框样式 */
+.login-input {
+  background: var(--color-bg-tertiary) !important;
+  border: 1px solid var(--color-glass-border) !important;
+  border-radius: var(--radius-lg) !important;
+  transition: all var(--duration-fast) var(--easing-default) !important;
+}
+
+.login-input:hover {
+  border-color: var(--color-accent-gold) !important;
+}
+
+.login-input:focus,
+.login-input.ant-input-focused {
+  border-color: var(--color-accent-gold) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
+}
+
+.login-input .ant-input {
+  background: transparent !important;
+  color: var(--color-text-primary) !important;
+}
+
+.login-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.input-icon {
+  color: var(--color-text-tertiary);
+  font-size: var(--text-lg);
+}
+
+.login-input:focus .input-icon {
+  color: var(--color-accent-gold);
+}
+
+/* 登录按钮 */
+.login-button {
+  height: 48px !important;
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, var(--color-accent-copper) 100%) !important;
+  border: none !important;
+  border-radius: var(--radius-lg) !important;
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  letter-spacing: 2px;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  transition: all var(--duration-fast) var(--easing-default) !important;
+}
+
+.login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* 底部装饰 */
+.login-footer {
+  margin-top: var(--spacing-8);
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+.footer-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-4);
+  color: var(--color-text-tertiary);
+  font-size: var(--text-xs);
+  letter-spacing: 1px;
+  font-family: var(--font-mono);
+}
+
+.footer-dot {
+  width: 4px;
+  height: 4px;
+  background: var(--color-accent-gold);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--color-accent-gold);
+}
+
+/* Ant Design Form 覆盖 */
+.login-form-container .ant-form-item {
+  margin-bottom: var(--spacing-6);
+}
+
+.login-form-container .ant-form-item-explain-error {
+  color: var(--color-error);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .login-page {
+    padding: var(--spacing-6);
+  }
+
+  .login-card {
+    width: 100%;
+    padding: var(--spacing-8) var(--spacing-6);
+  }
+
+  .logo-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .logo-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .login-title {
+    font-size: var(--text-3xl);
+    letter-spacing: 4px;
+  }
+
+  .login-subtitle {
+    font-size: var(--text-sm);
+  }
+
+  .floating-orb {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: var(--spacing-6) var(--spacing-5);
+  }
+
+  .login-title {
+    font-size: var(--text-2xl);
+  }
+
+  .footer-text {
+    font-size: 10px;
+  }
+}

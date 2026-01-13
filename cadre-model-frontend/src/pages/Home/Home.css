@@ -1,0 +1,529 @@
+/**
+ * 首页样式 - 平台说明页面
+ */
+
+.home-page {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ============================================
+   鼠标跟随光晕效果
+   ============================================ */
+
+.mouse-glow {
+  position: fixed;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+/* ============================================
+   通用 Section 样式
+   ============================================ */
+
+section {
+  padding: 100px 20px;
+  position: relative;
+  z-index: 2;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.section-subtitle {
+  font-size: 16px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+/* ============================================
+   平台介绍 Section
+   ============================================ */
+
+.intro-section {
+  background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+}
+
+.intro-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.intro-text {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.intro-title {
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text-primary);
+}
+
+.title-accent {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.intro-description {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+}
+
+.intro-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.intro-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.intro-feature-item .anticon {
+  color: var(--color-accent-gold);
+  font-size: 16px;
+}
+
+.intro-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.intro-card-stack {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+
+.intro-card {
+  position: absolute;
+  width: 220px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  transition: all 0.3s ease;
+}
+
+.intro-card .anticon {
+  font-size: 24px;
+  color: var(--color-accent-gold);
+}
+
+.intro-card-1 {
+  top: 0;
+  left: 30px;
+  transform: rotate(-5deg);
+}
+
+.intro-card-2 {
+  top: 100px;
+  left: 0;
+  transform: rotate(3deg);
+}
+
+.intro-card-3 {
+  top: 200px;
+  left: 30px;
+  transform: rotate(-2deg);
+}
+
+.intro-card-stack:hover .intro-card {
+  transform: rotate(0deg) scale(1.05);
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+/* ============================================
+   平台能力 Section - 简洁风格
+   ============================================ */
+
+.capabilities-section {
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-primary) 100%);
+  padding: 80px 20px;
+}
+
+.capabilities-wrapper {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 48px;
+}
+
+.capabilities-group {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.capabilities-group-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 24px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+}
+
+.capabilities-group-header .anticon {
+  font-size: 22px;
+  color: var(--color-accent-gold);
+}
+
+.capabilities-group-header h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.capabilities-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.capability-card-simple {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.capability-card-simple:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(212, 175, 55, 0.25);
+  transform: translateX(8px);
+}
+
+.capability-icon-simple {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.08) 100%);
+  border-radius: 12px;
+  font-size: 20px;
+  color: var(--color-accent-gold);
+  transition: all 0.3s ease;
+}
+
+.capability-card-simple:hover .capability-icon-simple {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%);
+  color: var(--color-bg-primary);
+  transform: scale(1.05);
+}
+
+.capability-content-simple h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 6px 0;
+}
+
+.capability-content-simple p {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ============================================
+   CTA Section
+   ============================================ */
+
+.cta-section {
+  padding: 100px 20px;
+  background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-secondary) 100%);
+}
+
+.cta-card {
+  position: relative;
+  padding: 80px 40px;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 32px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.cta-glow {
+  position: absolute;
+  top: -50%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.cta-title {
+  position: relative;
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 800;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.cta-description {
+  position: relative;
+  font-size: 18px;
+  color: var(--color-text-secondary);
+  margin-bottom: 40px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.7;
+}
+
+.cta-actions {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cta-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.cta-button-primary {
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%);
+  color: var(--color-bg-primary);
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.4);
+}
+
+.cta-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(212, 175, 55, 0.6);
+}
+
+.cta-button-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--color-text-primary);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cta-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--color-accent-gold);
+  transform: translateY(-2px);
+}
+
+/* ============================================
+   响应式
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .intro-content {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .intro-visual {
+    order: -1;
+  }
+
+  .capabilities-wrapper {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 20px;
+  }
+
+  .capabilities-section {
+    padding: 60px 20px;
+  }
+
+  .capabilities-wrapper {
+    gap: 24px;
+  }
+
+  .capabilities-group {
+    gap: 16px;
+  }
+
+  .capabilities-group-header {
+    padding: 12px 16px;
+  }
+
+  .capabilities-group-header .anticon {
+    font-size: 18px;
+  }
+
+  .capabilities-group-header h3 {
+    font-size: 16px;
+  }
+
+  .capability-card-simple {
+    padding: 16px;
+  }
+
+  .capability-icon-simple {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .capability-content-simple h4 {
+    font-size: 14px;
+  }
+
+  .capability-content-simple p {
+    font-size: 12px;
+  }
+
+  .section-title {
+    font-size: 28px;
+  }
+
+  .section-subtitle {
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+
+  .intro-title {
+    font-size: 24px;
+  }
+
+  .intro-description {
+    font-size: 14px;
+  }
+
+  .intro-features {
+    grid-template-columns: 1fr;
+  }
+
+  .intro-card-stack {
+    width: 240px;
+    height: 240px;
+  }
+
+  .intro-card {
+    width: 180px;
+    height: 80px;
+    font-size: 14px;
+  }
+
+  .intro-card .anticon {
+    font-size: 20px;
+  }
+
+  .intro-card-1 {
+    top: 0;
+    left: 30px;
+  }
+
+  .intro-card-2 {
+    top: 80px;
+    left: 0;
+  }
+
+  .intro-card-3 {
+    top: 160px;
+    left: 30px;
+  }
+
+  .cta-card {
+    padding: 40px 24px;
+  }
+
+  .cta-title {
+    font-size: 24px;
+  }
+
+  .cta-description {
+    font-size: 16px;
+  }
+
+  .cta-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cta-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .intro-card-stack {
+    width: 200px;
+    height: 200px;
+  }
+
+  .intro-card {
+    width: 160px;
+    padding: 16px;
+  }
+}

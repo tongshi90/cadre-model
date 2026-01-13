@@ -1,0 +1,184 @@
+/**
+ * 干部来源与流动情况组件样式
+ */
+
+.source-and-flow-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* 统计卡片网格 */
+.source-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.source-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.source-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.source-stat-card.internal {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(22, 163, 74, 0.05) 100%);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.source-stat-card.external {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.source-stat-card.total {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(184, 150, 46, 0.05) 100%);
+  border-color: rgba(212, 175, 55, 0.3);
+}
+
+.source-stat-icon {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.source-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.source-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: var(--font-mono, monospace);
+  color: var(--color-text-primary);
+}
+
+.source-stat-label {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.source-stat-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-accent-gold);
+}
+
+/* 图表网格 */
+.source-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+.source-chart-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.source-chart-card:hover {
+  border-color: rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.source-chart-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.source-chart-content {
+  position: relative;
+}
+
+/* 流动趋势区域 */
+.source-trend-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.3s ease;
+}
+
+.source-trend-section:hover {
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.source-trend-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.source-trend-content {
+  position: relative;
+}
+
+/* 数据说明区域 */
+.source-legend-section {
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.legend-note {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legend-icon {
+  font-size: 18px;
+}
+
+.legend-text {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.legend-text strong {
+  color: var(--color-accent-gold);
+  font-weight: 600;
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  .source-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .source-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .source-chart-title,
+  .source-trend-title {
+    font-size: 14px;
+  }
+}

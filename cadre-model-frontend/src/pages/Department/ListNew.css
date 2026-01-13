@@ -1,0 +1,375 @@
+/**
+ * 部门管理页面 - 紧凑树形样式
+ */
+
+.department-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   页面头部
+   ============================================ */
+
+.department-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.header-title .anticon {
+  color: var(--color-accent-gold);
+  font-size: 28px;
+}
+
+.add-root-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%);
+  border: none;
+  border-radius: 10px;
+  color: var(--color-bg-primary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+}
+
+.add-root-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+/* ============================================
+   树容器
+   ============================================ */
+
+.tree-wrapper {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 16px;
+  min-height: 400px;
+}
+
+.tree-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.tree-loading .loading-text {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  margin: 0;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(212, 175, 55, 0.2);
+  border-top-color: var(--color-accent-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   树节点
+   ============================================ */
+
+.tree-node-wrapper {
+  position: relative;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tree-item:hover {
+  background: rgba(212, 175, 55, 0.08);
+}
+
+.tree-item.hovered {
+  background: rgba(212, 175, 55, 0.12);
+}
+
+/* 根节点 */
+.tree-item.root-item {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  margin-bottom: 12px;
+}
+
+.tree-item.root-item .tree-label.root-label {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-accent-gold);
+}
+
+.tree-item.root-item .tree-toggle {
+  color: var(--color-accent-gold);
+}
+
+/* 缩进 */
+.tree-indent {
+  flex-shrink: 0;
+}
+
+/* 展开/折叠图标 */
+.tree-toggle {
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-tertiary);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.expand-icon {
+  transition: transform 0.2s ease;
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.tree-leaf-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--color-text-tertiary);
+  border-radius: 50%;
+}
+
+/* 节点标签 */
+.tree-label {
+  flex: 1;
+  font-size: 14px;
+  color: var(--color-text-primary);
+  user-select: none;
+}
+
+/* 子节点数量 */
+.tree-count {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin-right: 8px;
+}
+
+/* 操作按钮 */
+.tree-actions {
+  display: flex;
+  gap: 6px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tree-actions.visible {
+  opacity: 1;
+}
+
+.tree-item:hover .tree-actions {
+  opacity: 1;
+}
+
+.action-btn {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.action-btn.add-btn:hover {
+  background: var(--color-success);
+  border-color: var(--color-success);
+  color: white;
+}
+
+.action-btn.edit-btn:hover {
+  background: var(--color-info);
+  border-color: var(--color-info);
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: white;
+}
+
+/* 子节点容器 */
+.tree-children {
+  position: relative;
+}
+
+/* ============================================
+   弹窗样式
+   ============================================ */
+
+.dept-modal .ant-modal-content,
+.delete-modal .ant-modal-content {
+  background: var(--color-bg-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+}
+
+.dept-modal .ant-modal-header,
+.delete-modal .ant-modal-header {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dept-modal .ant-modal-title,
+.delete-modal .ant-modal-title {
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.dept-modal .ant-modal-body,
+.delete-modal .ant-modal-body {
+  color: var(--color-text-secondary);
+}
+
+.dept-modal .ant-modal-footer,
+.delete-modal .ant-modal-footer {
+  background: transparent;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 表单样式 */
+.dept-modal .ant-input,
+.dept-modal .ant-input-textarea {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+.dept-modal .ant-input:hover,
+.dept-modal .ant-input-textarea:hover {
+  border-color: var(--color-accent-gold);
+}
+
+.dept-modal .ant-input:focus,
+.dept-modal .ant-input-textarea:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+/* 上级部门信息 */
+.parent-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: rgba(212, 175, 55, 0.08);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.parent-label {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+.parent-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-accent-gold);
+}
+
+/* 删除确认内容 */
+.delete-confirm-content {
+  padding: 8px 0;
+}
+
+.delete-warning {
+  font-size: 15px;
+  color: var(--color-text-primary);
+  margin-bottom: 12px;
+}
+
+.delete-warning strong {
+  color: var(--color-accent-gold);
+}
+
+.delete-info {
+  padding: 12px 16px;
+  background: rgba(248, 113, 113, 0.1);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: 8px;
+  font-size: 14px;
+  color: #f87171;
+  margin-bottom: 12px;
+}
+
+.delete-hint {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  font-style: italic;
+}
+
+/* ============================================
+   响应式
+   ============================================ */
+
+@media (max-width: 768px) {
+  .department-page {
+    padding: 16px;
+  }
+
+  .department-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .add-root-btn {
+    justify-content: center;
+  }
+
+  .tree-actions {
+    opacity: 1;
+  }
+}
