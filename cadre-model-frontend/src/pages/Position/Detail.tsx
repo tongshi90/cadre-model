@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, Form, Input, InputNumber, Select, message, Tabs, Table } from 'antd';
-import { ArrowLeftOutlined, EditOutlined, TrophyOutlined, SettingOutlined, BulbOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, EditOutlined, TrophyOutlined, SettingOutlined, BulbOutlined, LoadingOutlined } from '@ant-design/icons';
 import { positionApi } from '@/services/positionApi';
 import type { PositionInfo } from '@/types';
 import { ABILITY_DIMENSION_LIST } from '@/utils/abilityConstants';
@@ -235,7 +235,12 @@ const PositionDetail = () => {
   ];
 
   if (!data) {
-    return <div className="detail-loading">加载中...</div>;
+    return (
+      <div className="detail-loading">
+        <LoadingOutlined style={{ fontSize: 48, color: '#d4af37' }} />
+        <p>加载中...</p>
+      </div>
+    );
   }
 
   return (

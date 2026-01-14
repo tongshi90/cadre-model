@@ -16,6 +16,7 @@ import {
   RobotOutlined,
   CalendarOutlined,
   ProfileOutlined,
+  LoadingOutlined,
 } from '@ant-design/icons';
 import { cadreApi, matchApi, aiAnalysisApi } from '@/services/api';
 import { positionApi } from '@/services/positionApi';
@@ -802,7 +803,12 @@ ${JSON.stringify(cadreData, null, 2)}
   };
 
   if (!data || loading) {
-    return <div className="detail-loading">加载中...</div>;
+    return (
+      <div className="detail-loading">
+        <LoadingOutlined style={{ fontSize: 48, color: '#d4af37' }} />
+        <p>加载中...</p>
+      </div>
+    );
   }
 
   const statusConfig = {
