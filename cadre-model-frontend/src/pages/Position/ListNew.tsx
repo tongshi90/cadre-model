@@ -178,7 +178,7 @@ const PositionListNew = () => {
                 size="large"
                 className="search-input"
                 onSearch={handleSearch}
-                onPressEnter={handleSearch}
+                onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
               />
             </div>
             <Button

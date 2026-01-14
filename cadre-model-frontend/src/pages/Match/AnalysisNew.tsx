@@ -64,7 +64,7 @@ const MatchAnalysis = () => {
   // 匹配分析进度状态
   const [analyzing, setAnalyzing] = useState(false);
   const [progress, setProgress] = useState<MatchProgress>({ current: 0, total: 0 });
-  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingTimerRef = useRef<number | null>(null);
 
   // 查看干部详情
   const handleViewDetail = (record: MatchResult) => {
@@ -184,8 +184,8 @@ const MatchAnalysis = () => {
 
             // 更新进度
             setProgress({
-              current: progressData.current || 0,
-              total: progressData.total || 0
+              current: progressData?.current || 0,
+              total: progressData?.total || 0
             });
           } catch (error) {
             console.error('Failed to fetch progress:', error);
