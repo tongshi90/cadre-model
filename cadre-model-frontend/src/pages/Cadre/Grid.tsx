@@ -1,16 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Input, Popconfirm, message, Pagination, Tree, Button } from 'antd';
+import { Input, Popconfirm, message, Pagination, Tree, Button, Drawer } from 'antd';
 import {
   UserOutlined,
   EditOutlined,
   DeleteOutlined,
   ApartmentOutlined,
-  PlusOutlined
+  PlusOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import { cadreApi, departmentApi } from '@/services/api';
 import type { CadreBasicInfo } from '@/types';
 import type { DataNode } from 'antd/es/tree';
+import DepartmentListNew from '../Department/ListNew';
+import '../Department/ListNew.css';
 import './Grid.css';
 
 const { Search } = Input;
@@ -35,32 +38,21 @@ const CadreGrid = () => {
   const [departmentTree, setDepartmentTree] = useState<Department[]>([]);
   const [selectedDepartmentId, setSelectedDepartmentId] = useState<number | undefined>();
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>(['all']);
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [departmentDrawerVisible, setDepartmentDrawerVisible] = useState(false);
 
   // 获取部门树
+  const fetchDepartmentTree = async () => {
+    try {
+      const response = await departmentApi.getTree();
+      const depts = response.data.data || [];
+      setDepartmentTree(depts);
+    } catch (error) {
+      console.error('Failed to fetch department tree:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchDepartmentTree = async () => {
-      try {
-        const response = await departmentApi.getTree();
-        const depts = response.data.data || [];
-        setDepartmentTree(depts);
-
-        // 收集所有部门ID用于展开
-        const collectKeys = (deps: Department[]): React.Key[] => {
-          const keys: React.Key[] = [];
-          deps.forEach(dept => {
-            keys.push(dept.id);
-            if (dept.children) {
-              keys.push(...collectKeys(dept.children));
-            }
-          });
-          return keys;
-        };
-
-        setExpandedKeys(['all', ...collectKeys(depts)]);
-      } catch (error) {
-        console.error('Failed to fetch department tree:', error);
-      }
-    };
     fetchDepartmentTree();
   }, []);
 
@@ -73,8 +65,60 @@ const CadreGrid = () => {
     }));
   };
 
+  // 递归过滤部门树
+  const filterDepartmentTree = (depts: Department[], filterText: string): Department[] => {
+    if (!filterText) return depts;
+
+    const result: Department[] = [];
+    for (const dept of depts) {
+      const matchesSelf = dept.name.toLowerCase().includes(filterText.toLowerCase());
+      const filteredChildren = dept.children ? filterDepartmentTree(dept.children, filterText) : [];
+
+      if (matchesSelf || filteredChildren.length > 0) {
+        result.push({
+          ...dept,
+          children: filteredChildren.length > 0 ? filteredChildren : dept.children,
+        });
+      }
+    }
+    return result;
+  };
+
+  // 获取过滤后的部门树
+  const filteredDepartmentTree = useMemo(() => {
+    return filterDepartmentTree(departmentTree, departmentFilter);
+  }, [departmentTree, departmentFilter]);
+
+  // 收集所有需要展开的节点key
+  const collectExpandedKeys = useMemo(() => {
+    const keys: React.Key[] = ['all'];
+
+    const collectKeys = (deps: Department[]) => {
+      deps.forEach(dept => {
+        keys.push(dept.id);
+        if (dept.children) {
+          collectKeys(dept.children);
+        }
+      });
+    };
+
+    // 如果有过滤条件，只展开过滤后的节点；否则展开所有节点
+    if (departmentFilter) {
+      collectKeys(filteredDepartmentTree);
+    } else {
+      collectKeys(departmentTree);
+    }
+
+    return keys;
+  }, [departmentTree, filteredDepartmentTree, departmentFilter]);
+
+  // 当过滤条件变化时，更新展开的节点
+  useEffect(() => {
+    setExpandedKeys(collectExpandedKeys);
+  }, [collectExpandedKeys]);
+
   const treeData: DataNode[] = [
-    { title: '全部部门', key: 'all', children: convertToTreeData(departmentTree) }
+    { title: '全部部门', key: 'all', children: convertToTreeData(filteredDepartmentTree) }
   ];
 
   const fetchData = async () => {
@@ -115,14 +159,6 @@ const CadreGrid = () => {
     fetchData();
   };
 
-  const handleReset = () => {
-    setName('');
-    setDepartmentId(undefined);
-    setSelectedDepartmentId(undefined);
-    setPage(1);
-    fetchData();
-  };
-
   const handleDelete = async (id: number) => {
     try {
       await cadreApi.delete(id);
@@ -142,7 +178,7 @@ const CadreGrid = () => {
   };
 
   // 处理部门树选择
-  const handleDepartmentSelect = (selectedKeys: React.Key[], info: any) => {
+  const handleDepartmentSelect = (selectedKeys: React.Key[]) => {
     const key = selectedKeys[0];
     if (key === 'all' || key === undefined) {
       setDepartmentId(undefined);
@@ -249,8 +285,22 @@ const CadreGrid = () => {
         {/* 左侧部门树 */}
         <div className="department-sidebar">
           <div className="sidebar-header">
-            <ApartmentOutlined />
-            <span>部门组织</span>
+            <Input
+              placeholder="搜索部门..."
+              prefix={<SearchOutlined />}
+              allowClear
+              value={departmentFilter}
+              onChange={(e) => setDepartmentFilter(e.target.value)}
+              className="department-filter-input"
+            />
+            <Button
+              size="small"
+              icon={<ApartmentOutlined />}
+              className="department-manage-btn"
+              onClick={() => setDepartmentDrawerVisible(true)}
+            >
+              部门管理
+            </Button>
           </div>
           <div className="department-tree-container">
             <Tree
@@ -341,6 +391,22 @@ const CadreGrid = () => {
           </div>
         </div>
       </div>
+
+      {/* 部门管理抽屉 */}
+      <Drawer
+        title="部门管理"
+        placement="left"
+        width={600}
+        open={departmentDrawerVisible}
+        onClose={() => {
+          setDepartmentDrawerVisible(false);
+          // 关闭抽屉时刷新部门树
+          fetchDepartmentTree();
+        }}
+        className="department-drawer"
+      >
+        <DepartmentListNew />
+      </Drawer>
     </div>
   );
 };

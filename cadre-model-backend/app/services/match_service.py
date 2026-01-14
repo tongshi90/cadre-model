@@ -236,7 +236,10 @@ class MatchService:
         Returns:
             匹配结果字典列表（只包含必要字段）
         """
-        from sqlalchemy.orm import joinedload
+        from sqlalchemy.orm import joinedload, aliased
+
+        # 为最高匹配岗位创建别名
+        BestMatchPosition = aliased(PositionInfo)
 
         # 查询干部当前岗位的匹配结果，只选择必要字段
         # 使用 join 来一次性获取关联数据
@@ -248,18 +251,24 @@ class MatchService:
             MatchResult.deduction_score,
             MatchResult.final_score,
             MatchResult.match_level,
+            MatchResult.best_match_position_id,
+            MatchResult.best_match_score,
             CadreBasicInfo.id.label('cadre_info_id'),
             CadreBasicInfo.employee_no,
             CadreBasicInfo.name,
             CadreBasicInfo.position_id.label('cadre_position_id'),
             PositionInfo.id.label('position_info_id'),
             PositionInfo.position_name,
+            BestMatchPosition.id.label('best_position_id'),
+            BestMatchPosition.position_name.label('best_position_name'),
             Department.id.label('department_id'),
             Department.name.label('department_name')
         ).join(
             CadreBasicInfo, MatchResult.cadre_id == CadreBasicInfo.id
         ).join(
             PositionInfo, MatchResult.position_id == PositionInfo.id
+        ).outerjoin(
+            BestMatchPosition, MatchResult.best_match_position_id == BestMatchPosition.id
         ).outerjoin(
             Department, CadreBasicInfo.department_id == Department.id
         ).filter(
@@ -283,6 +292,8 @@ class MatchService:
                 'deduction_score': row.deduction_score,
                 'final_score': row.final_score,
                 'match_level': row.match_level,
+                'best_match_position_id': row.best_match_position_id,
+                'best_match_score': row.best_match_score,
                 'cadre': {
                     'id': row.cadre_info_id,
                     'employee_no': row.employee_no,
@@ -300,7 +311,11 @@ class MatchService:
                 'position': {
                     'id': row.position_info_id,
                     'position_name': row.position_name
-                }
+                },
+                'best_match_position': {
+                    'id': row.best_position_id,
+                    'position_name': row.best_position_name
+                } if row.best_position_id else None
             })
 
         return results
@@ -661,13 +676,42 @@ class MatchService:
         """
         批量计算干部当前所在岗位的匹配度
 
+        首先删除所有干部当前岗位的匹配结果，然后逐个计算并保存新结果。
         获取所有有岗位的在职干部，计算每个干部与其当前岗位的匹配度，
-        删除旧匹配结果并保存新的结果到数据库。
+        同时计算该干部与所有其他岗位的匹配度，找出最高匹配岗位。
 
         Returns:
             匹配结果列表
         """
-        # 获取所有有岗位的在职干部
+        # 1. 首先删除所有干部当前岗位的匹配结果
+        # 查询所有有岗位的在职干部
+        cadre_ids_with_position = db.session.query(CadreBasicInfo.id).filter(
+            CadreBasicInfo.status == 1,
+            CadreBasicInfo.position_id.isnot(None)
+        ).all()
+        cadre_ids = [cid[0] for cid in cadre_ids_with_position]
+
+        if cadre_ids:
+            # 删除这些干部与各自当前岗位的匹配结果
+            # 使用子查询来删除：匹配结果中的岗位ID等于干部的当前岗位ID
+            old_results = MatchResult.query.filter(
+                MatchResult.cadre_id.in_(cadre_ids)
+            ).all()
+
+            for old_result in old_results:
+                # 检查是否是当前岗位的匹配结果
+                cadre = CadreBasicInfo.query.get(old_result.cadre_id)
+                if cadre and cadre.position_id == old_result.position_id:
+                    # 删除关联的报告
+                    MatchReport.query.filter_by(match_result_id=old_result.id).delete()
+                    db.session.delete(old_result)
+
+            db.session.commit()
+
+        # 2. 获取所有启用的岗位
+        all_positions = PositionInfo.query.filter_by(status=1).all()
+
+        # 3. 获取所有有岗位的在职干部
         cadres = CadreBasicInfo.query.filter(
             CadreBasicInfo.status == 1,
             CadreBasicInfo.position_id.isnot(None)
@@ -676,21 +720,36 @@ class MatchService:
         results = []
         for cadre in cadres:
             try:
-                # 删除该干部与该岗位的旧匹配结果（如果存在）
-                old_results = MatchResult.query.filter_by(
-                    cadre_id=cadre.id,
-                    position_id=cadre.position_id
-                ).all()
+                # 计算当前岗位的匹配度并保存到数据库
+                result = MatchService.calculate(cadre.id, cadre.position_id, save_to_db=True)
 
-                for old_result in old_results:
-                    # 同时删除关联的报告
-                    MatchReport.query.filter_by(match_result_id=old_result.id).delete()
-                    db.session.delete(old_result)
+                # 计算该干部与所有岗位的匹配度，找出最高分
+                best_position_id = None
+                best_score = 0.0
 
+                for position in all_positions:
+                    # 跳过当前岗位（已经计算过了）
+                    if position.id == cadre.position_id:
+                        continue
+
+                    try:
+                        # 计算匹配度，不保存到数据库
+                        match_result = MatchService.calculate(cadre.id, position.id, save_to_db=False)
+                        score = match_result.final_score or 0
+
+                        # 更新最高分
+                        if score > best_score:
+                            best_score = score
+                            best_position_id = position.id
+                    except Exception:
+                        # 单个岗位计算失败不影响其他岗位
+                        continue
+
+                # 更新当前岗位匹配结果中的最高匹配信息
+                result.best_match_position_id = best_position_id
+                result.best_match_score = best_score if best_position_id else None
                 db.session.commit()
 
-                # 计算新的匹配度并保存到数据库
-                result = MatchService.calculate(cadre.id, cadre.position_id, save_to_db=True)
                 results.append(result)
             except Exception as e:
                 # 记录错误但继续处理其他干部
@@ -1024,7 +1083,7 @@ class MatchService:
     @staticmethod
     def get_position_risk() -> List[Dict]:
         """
-        获取关键岗位风险数据
+        获取关键岗位风险数据（优化版本 - 消除 N+1 查询）
 
         风险因子：
         - 匹配度低：人岗匹配度 < 70
@@ -1044,23 +1103,88 @@ class MatchService:
         from sqlalchemy import and_
         from app.models.cadre import CadreDynamicInfo
 
-        # 获取所有关键岗位
-        positions = db.session.query(PositionInfo).filter(
-            PositionInfo.status == 1
-        ).all()
-
-        risk_results = []
         today = datetime.now().date()
         three_years_ago = today.replace(year=today.year - 3)
 
-        for position in positions:
-            # 获取当前任职者
-            incumbent = db.session.query(CadreBasicInfo).filter(
+        # 1. 一次性获取所有岗位
+        positions = db.session.query(PositionInfo.id, PositionInfo.position_code, PositionInfo.position_name).filter(
+            PositionInfo.status == 1
+        ).all()
+
+        position_ids = [p.id for p in positions]
+
+        # 2. 一次性获取所有岗位的任职者
+        incumbents = db.session.query(
+            CadreBasicInfo.id,
+            CadreBasicInfo.name,
+            CadreBasicInfo.birth_date,
+            CadreBasicInfo.entry_date,
+            CadreBasicInfo.department_id,
+            CadreBasicInfo.position_id
+        ).filter(
+            and_(
+                CadreBasicInfo.position_id.in_(position_ids),
+                CadreBasicInfo.status == 1
+            )
+        ).all()
+
+        # 构建任职者字典 {position_id: incumbent}
+        incumbent_dict = {inc.position_id: inc for inc in incumbents}
+        cadre_ids = [inc.id for inc in incumbents]
+
+        # 3. 一次性获取所有匹配结果
+        match_results = db.session.query(
+            MatchResult.cadre_id,
+            MatchResult.position_id,
+            MatchResult.final_score
+        ).filter(
+            and_(
+                MatchResult.cadre_id.in_(cadre_ids),
+                MatchResult.position_id.in_(position_ids)
+            )
+        ).order_by(MatchResult.create_time.desc()).all()
+
+        # 构建匹配结果字典 {(cadre_id, position_id): final_score}
+        match_dict = {(m.cadre_id, m.position_id): m.final_score for m in match_results}
+
+        # 4. 一次性获取所有培训记录统计
+        training_stats = db.session.query(
+            CadreDynamicInfo.cadre_id,
+            func.count(CadreDynamicInfo.id)
+        ).filter(
+            and_(
+                CadreDynamicInfo.cadre_id.in_(cadre_ids),
+                CadreDynamicInfo.info_type == 1,  # 培训记录
+                CadreDynamicInfo.create_time >= three_years_ago
+            )
+        ).group_by(CadreDynamicInfo.cadre_id).all()
+
+        # 构建培训记录字典 {cadre_id: count}
+        training_dict = {t[0]: t[1] for t in training_stats}
+
+        # 5. 一次性获取每个部门的人数统计（用于检查后备干部）
+        if incumbents:
+            department_ids = list(set([inc.department_id for inc in incumbents if inc.department_id]))
+            dept_counts = db.session.query(
+                CadreBasicInfo.department_id,
+                func.count(CadreBasicInfo.id)
+            ).filter(
                 and_(
-                    CadreBasicInfo.position_id == position.id,
+                    CadreBasicInfo.department_id.in_(department_ids),
                     CadreBasicInfo.status == 1
                 )
-            ).first()
+            ).group_by(CadreBasicInfo.department_id).all()
+
+            # 构建部门人数字典 {department_id: count}
+            dept_count_dict = {d[0]: d[1] for d in dept_counts}
+        else:
+            dept_count_dict = {}
+
+        # 6. 组装结果
+        risk_results = []
+
+        for position in positions:
+            incumbent = incumbent_dict.get(position.id)
 
             # 初始化风险因子
             risks = {
@@ -1071,17 +1195,10 @@ class MatchService:
                 'long_term': False
             }
 
-            # 检查是否有任职者
             if incumbent:
                 # 1. 检查匹配度 < 70
-                match_result = db.session.query(MatchResult).filter(
-                    and_(
-                        MatchResult.cadre_id == incumbent.id,
-                        MatchResult.position_id == position.id
-                    )
-                ).order_by(MatchResult.create_time.desc()).first()
-
-                if match_result and match_result.final_score < 70:
+                match_score = match_dict.get((incumbent.id, position.id))
+                if match_score is not None and match_score < 70:
                     risks['low_match'] = True
 
                 # 2. 检查年龄 > 55
@@ -1092,28 +1209,13 @@ class MatchService:
                     if age > 55:
                         risks['age_risk'] = True
 
-                # 3. 检查单点任职（无后备）
-                # 查找是否有其他干部可以接替（同一部门、相近能力）
-                potential_successors = db.session.query(CadreBasicInfo).filter(
-                    and_(
-                        CadreBasicInfo.department_id == incumbent.department_id,
-                        CadreBasicInfo.id != incumbent.id,
-                        CadreBasicInfo.status == 1
-                    )
-                ).count()
-
-                if potential_successors == 0:
+                # 3. 检查单点任职（部门人数 <= 1）
+                dept_count = dept_count_dict.get(incumbent.department_id, 0)
+                if dept_count <= 1:
                     risks['single_point'] = True
 
                 # 4. 检查培养缺失（3年无培养记录）
-                training_count = db.session.query(CadreDynamicInfo).filter(
-                    and_(
-                        CadreDynamicInfo.cadre_id == incumbent.id,
-                        CadreDynamicInfo.info_type == 1,  # 培训记录
-                        CadreDynamicInfo.create_time >= three_years_ago
-                    )
-                ).count()
-
+                training_count = training_dict.get(incumbent.id, 0)
                 if training_count == 0:
                     risks['no_training'] = True
 
@@ -1124,7 +1226,6 @@ class MatchService:
                     )
                     if entry_years > 6:
                         risks['long_term'] = True
-
             else:
                 # 岗位空缺，算作单点任职风险
                 risks['single_point'] = True
@@ -1145,7 +1246,6 @@ class MatchService:
                 'position_id': position.id,
                 'position_code': position.position_code,
                 'position_name': position.position_name,
-                'department': '未分配',
                 'incumbent': None,
                 'risks': risks,
                 'risk_count': risk_count,
@@ -1154,17 +1254,21 @@ class MatchService:
 
             # 添加任职者信息
             if incumbent:
+                age = None
+                if incumbent.birth_date:
+                    age = today.year - incumbent.birth_date.year - (
+                        (today.month, today.day) < (incumbent.birth_date.month, incumbent.birth_date.day)
+                    )
+
                 result['incumbent'] = {
                     'id': incumbent.id,
                     'name': incumbent.name,
-                    'age': today.year - incumbent.birth_date.year - (
-                        (today.month, today.day) < (incumbent.birth_date.month, incumbent.birth_date.day)
-                    ) if incumbent.birth_date else None
+                    'age': age
                 }
 
                 # 添加匹配度分数
-                if match_result:
-                    result['incumbent']['match_score'] = match_result.final_score
+                if match_score is not None:
+                    result['incumbent']['match_score'] = match_score
 
             risk_results.append(result)
 
@@ -1177,7 +1281,7 @@ class MatchService:
     @staticmethod
     def get_quality_portrait() -> List[Dict]:
         """
-        获取干部质量画像数据
+        获取干部质量画像数据（优化版本 - 消除 N+1 查询）
 
         分析规则：
         - 明星干部：高绩效(近3年≥2次A) + 高匹配(≥80)
@@ -1191,48 +1295,87 @@ class MatchService:
         from sqlalchemy import and_
         from app.models.cadre import CadreDynamicInfo
 
-        # 获取所有在职干部
-        cadres = db.session.query(CadreBasicInfo).filter(
-            CadreBasicInfo.status == 1
-        ).all()
-
-        quality_results = []
         today = datetime.now().date()
         three_years_ago = today.replace(year=today.year - 3)
 
+        # 1. 一次性获取所有在职干部（包含部门和岗位信息）
+        cadres = db.session.query(
+            CadreBasicInfo.id,
+            CadreBasicInfo.name,
+            CadreBasicInfo.employee_no,
+            CadreBasicInfo.position_id,
+            CadreBasicInfo.department_id
+        ).filter(
+            CadreBasicInfo.status == 1
+        ).all()
+
+        cadre_ids = [c.id for c in cadres]
+
+        # 2. 一次性获取所有干部的绩效统计（近3年A/S次数）
+        performance_stats = db.session.query(
+            CadreDynamicInfo.cadre_id,
+            func.count(CadreDynamicInfo.id)
+        ).filter(
+            and_(
+                CadreDynamicInfo.cadre_id.in_(cadre_ids),
+                CadreDynamicInfo.info_type == 3,  # 绩效数据
+                CadreDynamicInfo.assessment_grade.in_(['A', 'S']),
+                CadreDynamicInfo.create_time >= three_years_ago
+            )
+        ).group_by(CadreDynamicInfo.cadre_id).all()
+
+        # 构建绩效字典 {cadre_id: count}
+        performance_dict = {p[0]: p[1] for p in performance_stats}
+
+        # 3. 一次性获取所有干部的匹配度分数
+        match_scores = db.session.query(
+            MatchResult.cadre_id,
+            MatchResult.final_score
+        ).filter(
+            MatchResult.cadre_id.in_(cadre_ids)
+        ).order_by(MatchResult.create_time.desc()).all()
+
+        # 构建匹配度字典 {cadre_id: final_score}
+        match_dict = {}
+        for m in match_scores:
+            if m.cadre_id not in match_dict:  # 只保留最新的
+                match_dict[m.cadre_id] = m.final_score
+
+        # 4. 一次性获取所有干部的核心项目数
+        project_stats = db.session.query(
+            CadreDynamicInfo.cadre_id,
+            func.count(CadreDynamicInfo.id)
+        ).filter(
+            and_(
+                CadreDynamicInfo.cadre_id.in_(cadre_ids),
+                CadreDynamicInfo.info_type == 2,  # 项目经历
+                CadreDynamicInfo.is_core_project == True
+            )
+        ).group_by(CadreDynamicInfo.cadre_id).all()
+
+        # 构建项目数字典 {cadre_id: count}
+        project_dict = {p[0]: p[1] for p in project_stats}
+
+        # 5. 获取部门和岗位名称（需要 join）
+        departments = {d.id: d.name for d in db.session.query(Department.id, Department.name).filter(
+            Department.id.in_([c.department_id for c in cadres if c.department_id])
+        ).all()}
+
+        positions = {p.id: p.position_name for p in db.session.query(
+            PositionInfo.id, PositionInfo.position_name
+        ).filter(
+            PositionInfo.id.in_([c.position_id for c in cadres if c.position_id])
+        ).all()}
+
+        # 6. 组装结果
+        quality_results = []
+
         for cadre in cadres:
-            # 1. 计算绩效A次数（近3年，S等级也计入A）
-            performance_count = db.session.query(CadreDynamicInfo).filter(
-                and_(
-                    CadreDynamicInfo.cadre_id == cadre.id,
-                    CadreDynamicInfo.info_type == 3,  # 绩效数据
-                    CadreDynamicInfo.assessment_grade.in_(['A', 'S']),  # S等级比A更优秀，也计入
-                    CadreDynamicInfo.create_time >= three_years_ago
-                )
-            ).count()
+            performance_count = performance_dict.get(cadre.id, 0)
+            match_score = match_dict.get(cadre.id, 0)
+            core_project_count = project_dict.get(cadre.id, 0)
 
-            # 2. 获取匹配度分数
-            match_score = 0
-            if cadre.position_id:
-                match_result = db.session.query(MatchResult).filter(
-                    and_(
-                        MatchResult.cadre_id == cadre.id,
-                        MatchResult.position_id == cadre.position_id
-                    )
-                ).order_by(MatchResult.create_time.desc()).first()
-                if match_result:
-                    match_score = match_result.final_score
-
-            # 3. 计算核心项目数
-            core_project_count = db.session.query(CadreDynamicInfo).filter(
-                and_(
-                    CadreDynamicInfo.cadre_id == cadre.id,
-                    CadreDynamicInfo.info_type == 2,  # 项目经历
-                    CadreDynamicInfo.is_core_project == True
-                )
-            ).count()
-
-            # 4. 确定质量类型
+            # 确定质量类型
             is_high_performance = performance_count >= 2
             is_medium_performance = performance_count >= 1
             is_high_match = match_score >= 80
@@ -1254,8 +1397,8 @@ class MatchService:
                 'id': cadre.id,
                 'name': cadre.name,
                 'employee_no': cadre.employee_no,
-                'department': cadre.department.name if cadre.department else '未分配',
-                'position': cadre.position.position_name if cadre.position else '未分配',
+                'department': departments.get(cadre.department_id, '未分配'),
+                'position': positions.get(cadre.position_id, '未分配'),
                 'match_score': match_score,
                 'performance_score': performance_count,
                 'core_project_count': core_project_count,
@@ -1273,7 +1416,7 @@ class MatchService:
     @staticmethod
     def get_source_and_flow_statistics() -> Dict:
         """
-        获取干部来源与流动情况统计数据
+        获取干部来源与流动情况统计数据（优化版本 - 消除 N+1 查询）
 
         判断逻辑：
         - 外部引进：直接任职当前岗位，没有内部任岗记录（职务变更记录）
@@ -1285,22 +1428,48 @@ class MatchService:
         from sqlalchemy import and_
         from app.models.cadre import CadreDynamicInfo
 
-        # 获取所有在职干部
-        cadres = db.session.query(CadreBasicInfo).filter(
+        current_year = datetime.now().year
+
+        # 1. 一次性获取所有在职干部的基本信息
+        cadres = db.session.query(
+            CadreBasicInfo.id,
+            CadreBasicInfo.management_level,
+            CadreBasicInfo.entry_date
+        ).filter(
             CadreBasicInfo.status == 1
         ).all()
 
-        # 统计数据
+        cadre_ids = [c.id for c in cadres]
+
+        # 2. 一次性获取所有干部的职务变更记录
+        appointment_records = db.session.query(
+            CadreDynamicInfo.cadre_id,
+            CadreDynamicInfo.term_start_date,
+            CadreDynamicInfo.create_time
+        ).filter(
+            and_(
+                CadreDynamicInfo.cadre_id.in_(cadre_ids),
+                CadreDynamicInfo.info_type == 5  # 职务变更
+            )
+        ).order_by(CadreDynamicInfo.create_time.asc()).all()
+
+        # 3. 构建干部的职务变更记录字典 {cadre_id: [records]}
+        appointment_dict = {}
+        for record in appointment_records:
+            if record.cadre_id not in appointment_dict:
+                appointment_dict[record.cadre_id] = []
+            appointment_dict[record.cadre_id].append(record)
+
+        # 4. 初始化统计数据
         internal_count = 0  # 内部培养
         external_count = 0  # 外部引进
 
         # 按年份统计流动情况（最近5年）
-        current_year = datetime.now().year
         flow_by_year = {}
         for year in range(current_year - 5, current_year + 1):
             flow_by_year[year] = {
-                'internal': 0,  # 内部调动到当前岗位
-                'external': 0   # 外部入职
+                'internal': 0,
+                'external': 0
             }
 
         # 按管理层级统计来源分布
@@ -1311,42 +1480,29 @@ class MatchService:
             '基层': {'internal': 0, 'external': 0}
         }
 
+        # 5. 遍历干部统计数据
         for cadre in cadres:
-            # 查询干部的职务变更记录
-            appointment_records = db.session.query(CadreDynamicInfo).filter(
-                and_(
-                    CadreDynamicInfo.cadre_id == cadre.id,
-                    CadreDynamicInfo.info_type == 5  # 职务变更
-                )
-            ).order_by(CadreDynamicInfo.create_time.asc()).all()
+            records = appointment_dict.get(cadre.id, [])
 
-            # 判断来源：如果有职务变更记录，且第一条记录的岗位不是当前岗位，则为内部培养
-            # 如果没有职务变更记录，或者第一条记录的岗位就是当前岗位，则为外部引进
-            is_internal = False
-
-            if appointment_records and len(appointment_records) > 1:
-                # 有多次职务变更记录，说明是从其他岗位调来的
-                is_internal = True
+            # 判断来源：如果有多次职务变更记录，说明是从其他岗位调来的（内部培养）
+            is_internal = len(records) > 1
 
             # 统计来源
             if is_internal:
                 internal_count += 1
-                # 按管理层级统计
                 if cadre.management_level in source_by_level:
                     source_by_level[cadre.management_level]['internal'] += 1
             else:
                 external_count += 1
-                # 按管理层级统计
                 if cadre.management_level in source_by_level:
                     source_by_level[cadre.management_level]['external'] += 1
 
-            # 统计流动趋势：根据入职时间或首次职务变更时间
-            # 如果是外部引进，使用入职时间；如果是内部培养，使用首次职务变更时间
+            # 统计流动趋势
             flow_year = None
-            if is_internal and appointment_records:
+            if is_internal and records:
                 # 内部培养：使用首次职务变更的年份
-                if appointment_records[0].term_start_date:
-                    flow_year = appointment_records[0].term_start_date.year
+                if records[0].term_start_date:
+                    flow_year = records[0].term_start_date.year
             elif cadre.entry_date:
                 # 外部引进：使用入职年份
                 flow_year = cadre.entry_date.year
@@ -1357,10 +1513,10 @@ class MatchService:
                 else:
                     flow_by_year[flow_year]['external'] += 1
 
-        # 计算总数和占比
+        # 6. 计算总数和占比
         total_count = internal_count + external_count
 
-        # 构建结果
+        # 7. 构建结果
         result = {
             'total_count': total_count,
             'source_distribution': {
@@ -1405,6 +1561,30 @@ class MatchService:
             })
 
         return result
+
+    @staticmethod
+    def get_current_position_match_progress() -> Dict:
+        """
+        获取当前岗位匹配分析的进度
+
+        简单查询 match_result 表中的记录数作为已分析数量
+
+        Returns:
+            包含当前数量和总数的字典
+        """
+        # 查询 match_result 表中的总记录数（已分析数量）
+        current_count = db.session.query(func.count(MatchResult.id)).scalar()
+
+        # 统计有岗位的在职干部总数
+        total_count = db.session.query(func.count(CadreBasicInfo.id)).filter(
+            CadreBasicInfo.status == 1,
+            CadreBasicInfo.position_id.isnot(None)
+        ).scalar()
+
+        return {
+            'current': current_count or 0,
+            'total': total_count or 0
+        }
 
     @staticmethod
     def get_flow_cadres_details(year: int = None, source_type: str = None) -> Dict:
@@ -1500,4 +1680,29 @@ class MatchService:
         return {
             'total': len(flow_cadres),
             'cadres': flow_cadres
+        }
+
+    @staticmethod
+    def get_dashboard_all_data() -> Dict:
+        """
+        获取大屏所有数据（合并接口 - 优化性能）
+
+        一次性获取所有大屏需要的数据，减少 API 调用次数和数据库查询次数。
+
+        Returns:
+            包含所有大屏数据的字典
+        """
+        # 并发获取所有统计数据
+        match_statistics = MatchService.get_match_statistics()
+        age_structure = MatchService.get_age_structure_statistics()
+        position_risk = MatchService.get_position_risk()
+        quality_portrait = MatchService.get_quality_portrait()
+        source_and_flow = MatchService.get_source_and_flow_statistics()
+
+        return {
+            'match_statistics': match_statistics,
+            'age_structure': age_structure,
+            'position_risk': position_risk,
+            'quality_portrait': quality_portrait,
+            'source_and_flow': source_and_flow
         }

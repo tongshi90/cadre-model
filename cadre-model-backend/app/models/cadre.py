@@ -5,7 +5,12 @@ from app import db
 class CadreBasicInfo(db.Model):
     """干部基础信息表"""
     __tablename__ = 'cadre_basic_info'
-    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_comment': '干部基础信息表-存储干部的基本信息'}
+    __table_args__ = (
+        db.Index('idx_status_position', 'status', 'position_id'),
+        db.Index('idx_status_department', 'status', 'department_id'),
+        db.Index('idx_management_level', 'management_level'),
+        {'mysql_engine': 'InnoDB', 'mysql_comment': '干部基础信息表-存储干部的基本信息'}
+    )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     employee_no = db.Column(db.String(50), nullable=False, unique=True, comment='工号')
@@ -65,7 +70,12 @@ class CadreBasicInfo(db.Model):
 class CadreDynamicInfo(db.Model):
     """干部动态信息表"""
     __tablename__ = 'cadre_dynamic_info'
-    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_comment': '干部动态信息表-存储培训、项目、绩效、奖惩、职务变更等动态信息'}
+    __table_args__ = (
+        db.Index('idx_cadre_info_type', 'cadre_id', 'info_type'),
+        db.Index('idx_cadre_info_type_time', 'cadre_id', 'info_type', 'create_time'),
+        db.Index('idx_cadre_type_grade', 'cadre_id', 'info_type', 'assessment_grade'),
+        {'mysql_engine': 'InnoDB', 'mysql_comment': '干部动态信息表-存储培训、项目、绩效、奖惩、职务变更等动态信息'}
+    )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     cadre_id = db.Column(db.Integer, db.ForeignKey('cadre_basic_info.id'), nullable=False, comment='干部ID')

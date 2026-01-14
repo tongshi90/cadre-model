@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Form, Select, Button, Table, Tag, TreeSelect, message, Tabs } from 'antd';
+import { Form, Select, Button, Table, Tag, TreeSelect, message, Tabs, Progress } from 'antd';
 import { TeamOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { positionApi } from '@/services/positionApi';
@@ -10,7 +10,6 @@ import type { PositionInfo, CadreBasicInfo, MatchResult } from '@/types';
 import { getMatchLevelText } from '@/utils/helpers';
 import './Analysis.css';
 
-const MATCH_RESULTS_KEY = 'match_analysis_results';
 const CURRENT_TAB_KEY = 'match_analysis_current_tab';
 const CURRENT_RESULTS_KEY = 'match_analysis_current_results';
 const CUSTOM_RESULTS_KEY = 'match_analysis_custom_results';
@@ -20,6 +19,11 @@ interface TreeNode {
   value: string;
   key: string;
   children?: TreeNode[];
+}
+
+interface MatchProgress {
+  current: number;
+  total: number;
 }
 
 // 从 sessionStorage 初始化状态的函数
@@ -57,6 +61,10 @@ const MatchAnalysis = () => {
   const [activeTab, setActiveTab] = useState(initialState.activeTab);
   // 标记是否从存储恢复的数据
   const [isRestored, setIsRestored] = useState(initialState.hasStoredData);
+  // 匹配分析进度状态
+  const [analyzing, setAnalyzing] = useState(false);
+  const [progress, setProgress] = useState<MatchProgress>({ current: 0, total: 0 });
+  const pollingTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 查看干部详情
   const handleViewDetail = (record: MatchResult) => {
@@ -67,7 +75,9 @@ const MatchAnalysis = () => {
     } else {
       sessionStorage.setItem(CUSTOM_RESULTS_KEY, JSON.stringify(results));
     }
-    navigate(`/cadre/${record.cadre.id}`, { state: { fromMatch: true } });
+    if (record.cadre) {
+      navigate(`/cadre/${record.cadre.id}`, { state: { fromMatch: true } });
+    }
   };
 
   // 获取岗位列表
@@ -127,22 +137,65 @@ const MatchAnalysis = () => {
 
   // 执行干部当前岗位匹配分析
   const handleAnalyzeCurrentPosition = async () => {
-    setLoading(true);
+    setAnalyzing(true);
     setResults([]);
+    setProgress({ current: 0, total: 0 });
+
+    // 清除之前的定时器
+    if (pollingTimerRef.current) {
+      clearInterval(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
 
     try {
-      const response = await matchApi.batchCalculateCurrent();
-      const matchData = response.data.data?.results || [];
+      // 启动批量计算请求（不等待完成）
+      matchApi.batchCalculateCurrent().then((response) => {
+        const matchData = response.data.data?.results || [];
+        setResults(matchData);
+        // 保存结果到 sessionStorage
+        sessionStorage.setItem(CURRENT_RESULTS_KEY, JSON.stringify(matchData));
+        message.success(`成功分析 ${matchData.length} 名干部`);
 
-      setResults(matchData);
-      // 保存结果到 sessionStorage
-      sessionStorage.setItem(CURRENT_RESULTS_KEY, JSON.stringify(matchData));
-      message.success(`成功分析 ${matchData.length} 名干部`);
+        // 停止轮询
+        if (pollingTimerRef.current) {
+          clearInterval(pollingTimerRef.current);
+          pollingTimerRef.current = null;
+        }
+        setAnalyzing(false);
+      }).catch((error) => {
+        console.error('Failed to analyze current position match:', error);
+        message.error('匹配分析失败');
+
+        // 停止轮询
+        if (pollingTimerRef.current) {
+          clearInterval(pollingTimerRef.current);
+          pollingTimerRef.current = null;
+        }
+        setAnalyzing(false);
+      });
+
+      // 延迟1秒后开始轮询进度（避免查询到旧数据）
+      setTimeout(() => {
+        // 开始轮询进度（每2秒查询一次）
+        pollingTimerRef.current = setInterval(async () => {
+          try {
+            const progressResponse = await matchApi.getCurrentPositionProgress();
+            const progressData = progressResponse.data.data;
+
+            // 更新进度
+            setProgress({
+              current: progressData.current || 0,
+              total: progressData.total || 0
+            });
+          } catch (error) {
+            console.error('Failed to fetch progress:', error);
+          }
+        }, 2000); // 每2秒查询一次
+      }, 1000); // 延迟1秒开始轮询
     } catch (error) {
-      console.error('Failed to analyze current position match:', error);
-      message.error('匹配分析失败');
-    } finally {
-      setLoading(false);
+      console.error('Failed to start analysis:', error);
+      message.error('启动分析失败');
+      setAnalyzing(false);
     }
   };
 
@@ -244,8 +297,6 @@ const MatchAnalysis = () => {
       const matchData = response.data.data?.results || [];
 
       setResults(matchData);
-      // 保存结果到 sessionStorage
-      sessionStorage.setItem(CUSTOM_RESULTS_KEY, JSON.stringify(matchData));
 
       message.success(`成功匹配 ${matchData.length} 名干部`);
     } catch (error) {
@@ -276,6 +327,16 @@ const MatchAnalysis = () => {
       buildTreeData();
     }
   }, [cadres]);
+
+  // 组件卸载时清除轮询定时器
+  useEffect(() => {
+    return () => {
+      if (pollingTimerRef.current) {
+        clearInterval(pollingTimerRef.current);
+        pollingTimerRef.current = null;
+      }
+    };
+  }, []);
 
   // 表格列定义（当前岗位匹配 - 添加当前岗位列）
   const currentPositionColumns = [
@@ -312,6 +373,32 @@ const MatchAnalysis = () => {
       dataIndex: ['cadre', 'department', 'name'],
       key: 'department',
       width: 150,
+    },
+    {
+      title: '最高匹配岗位',
+      key: 'best_match_position',
+      width: 180,
+      render: (_: any, record: MatchResult) => {
+        const bestPosition = record.best_match_position;
+        const bestScore = record.best_match_score;
+        const currentScore = record.final_score || 0;
+        if (bestPosition && bestScore !== undefined) {
+          // 计算差值
+          const diff = bestScore - currentScore;
+          // 只显示有正差值的情况
+          const diffText = diff > 0 ? ` (↑${diff.toFixed(2)})` : '';
+
+          return (
+            <div>
+              <div>{bestPosition.position_name}</div>
+              <div style={{ fontSize: '12px', color: '#999' }}>
+                得分: {bestScore?.toFixed(2)}{diffText}
+              </div>
+            </div>
+          );
+        }
+        return '-';
+      },
     },
     {
       title: '基础得分',
@@ -483,8 +570,32 @@ const MatchAnalysis = () => {
 
     return (
       <div>
+        {/* 分析进度显示 */}
+        {analyzing && (
+          <div className="analysis-progress glass-card">
+            <div className="progress-content">
+              <h3 className="progress-title">正在分析干部岗位匹配度，请稍后...</h3>
+              <Progress
+                percent={progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}
+                status="active"
+                strokeColor={{
+                  '0%': '#108ee9',
+                  '100%': '#87d068',
+                }}
+                className="progress-bar"
+                strokeWidth={18}
+              />
+              <div className="progress-info">
+                <span className="progress-text">
+                  已生成 <strong>{progress.current}</strong> / <strong>{progress.total}</strong> 名干部
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* 无数据时显示大按钮 */}
-        {!hasResults && !loading && (
+        {!hasResults && !analyzing && (
           <div className="analysis-empty-state glass-card">
             <div className="empty-state-content">
               <div className="empty-state-icon">
@@ -505,7 +616,6 @@ const MatchAnalysis = () => {
               <Button
                 type="primary"
                 onClick={handleAnalyzeCurrentPosition}
-                loading={loading}
                 size="large"
                 className="start-analysis-btn"
               >
@@ -607,24 +717,21 @@ const MatchAnalysis = () => {
           activeKey={activeTab}
           onChange={(key) => {
             setActiveTab(key);
-            // Tab 切换时，先尝试从 sessionStorage 恢复数据
-            const savedResultsKey = key === 'current' ? CURRENT_RESULTS_KEY : CUSTOM_RESULTS_KEY;
-            const savedResults = sessionStorage.getItem(savedResultsKey);
-            if (savedResults) {
-              try {
-                setResults(JSON.parse(savedResults));
-              } catch (error) {
-                console.error('Failed to restore match results:', error);
-                setResults([]);
-                // 如果是当前岗位匹配 Tab 且没有保存的数据，则获取
-                if (key === 'current') {
-                  fetchCurrentPositionResults();
+            // Tab 切换时，清除当前结果
+            setResults([]);
+
+            // 如果切换到当前岗位匹配 Tab，获取已保存的结果
+            if (key === 'current') {
+              const savedResults = sessionStorage.getItem(CURRENT_RESULTS_KEY);
+              if (savedResults) {
+                try {
+                  setResults(JSON.parse(savedResults));
+                } catch (error) {
+                  console.error('Failed to restore current position results:', error);
                 }
               }
-            } else {
-              setResults([]);
-              // 如果是当前岗位匹配 Tab 且没有保存的数据，则获取
-              if (key === 'current') {
+              // 如果没有保存的数据，则从后端获取
+              if (!savedResults) {
                 fetchCurrentPositionResults();
               }
             }
@@ -634,7 +741,7 @@ const MatchAnalysis = () => {
         />
 
         {/* 统计概览 */}
-        {results.length > 0 && (
+        {results.length > 0 && !analyzing && (
           <div className="analysis-summary glass-card">
             <div className="summary-header">
               <span className="summary-title">
@@ -684,7 +791,7 @@ const MatchAnalysis = () => {
         )}
 
         {/* 结果表格 */}
-        {results.length > 0 && !loading && (
+        {results.length > 0 && !loading && !analyzing && (
           <div className="analysis-results glass-card">
             <Table
               columns={activeTab === 'current' ? currentPositionColumns : customMatchColumns}
@@ -697,16 +804,8 @@ const MatchAnalysis = () => {
           </div>
         )}
 
-        {/* 加载状态 */}
-        {loading && (
-          <div className="analysis-loading glass-card">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">加载中...</p>
-          </div>
-        )}
-
         {/* 空状态 - 只在自定义匹配Tab时显示 */}
-        {!loading && results.length === 0 && activeTab === 'custom' && (
+        {!analyzing && results.length === 0 && activeTab === 'custom' && (
           <div className="analysis-empty glass-card">
             <TeamOutlined className="empty-icon" />
             <p className="empty-text">选择岗位和部门/干部后开始分析</p>

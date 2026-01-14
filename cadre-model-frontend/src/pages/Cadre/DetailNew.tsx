@@ -17,7 +17,7 @@ import {
   CalendarOutlined,
   ProfileOutlined,
 } from '@ant-design/icons';
-import { cadreApi, matchApi } from '@/services/api';
+import { cadreApi, matchApi, aiAnalysisApi } from '@/services/api';
 import { positionApi } from '@/services/positionApi';
 import type { CadreBasicInfo, CadreDynamicInfo } from '@/types';
 import dayjs from 'dayjs';
@@ -99,6 +99,229 @@ const CadreDetailNew = () => {
   const [traitSubmitting, setTraitSubmitting] = useState(false);
   const [traitModalVisible, setTraitModalVisible] = useState(false);
 
+  // AI分析相关
+  const [aiResult, setAiResult] = useState<string>('');
+  const [aiLoading, setAiLoading] = useState(false);
+
+  // 调用硅基流动API进行AI分析
+  const handleAIAnalysis = async () => {
+    if (!data) {
+      message.warning('干部数据未加载完成，请稍后重试');
+      return;
+    }
+
+    setAiLoading(true);
+
+    // 构建干部完整数据JSON
+    const cadreData = {
+      // 基本信息
+      basicInfo: {
+        employee_no: data.employee_no,
+        name: data.name,
+        gender: data.gender,
+        birth_date: data.birth_date,
+        age: calculateAge(data.birth_date),
+        graduated_school: data.graduated_school,
+        education: data.education,
+        political_status: data.political_status,
+        entry_date: data.entry_date,
+        work_years: calculateWorkYears(data.entry_date),
+        work_province: data.work_province,
+        student_soldier_class: data.student_soldier_class,
+        is_dispatched: data.is_dispatched,
+        status: data.status,
+      },
+      // 岗位信息
+      position: data.position ? {
+        id: data.position.id,
+        position_code: data.position.position_code,
+        position_name: data.position.position_name,
+        job_grade: data.job_grade,
+        management_level: data.management_level,
+        management_attribution: data.management_attribution,
+      } : null,
+      // 部门信息
+      department: data.department ? {
+        id: data.department.id,
+        name: data.department.name,
+      } : null,
+      // 岗位匹配情况
+      matchResult: matchResult ? {
+        score: matchResult.score,
+        level: matchResult.level,
+        base_score: matchResult.base_score,
+        deducted_score: matchResult.deducted_score,
+        hard_requirements_met: matchResult.hard_requirements_met,
+        failed_requirements: matchResult.failed_requirements,
+        suggested_requirements_met: matchResult.suggested_requirements_met,
+        failed_suggestions: matchResult.failed_suggestions,
+      } : null,
+      // 能力评估
+      abilityScores: abilityData.length > 0 ? abilityData.map(item => ({
+        dimension: item.dimension,
+        dimension_name: item.dimension,
+        score: item.score,
+        tags: item.tags ? item.tags.split(',').map((tag: string) => tag.trim()) : [],
+      })) : null,
+      // 特质分析
+      traits: traitData.length > 0 ? traitData.map(item => ({
+        trait_type: item.trait_type,
+        trait_type_name: TRAIT_TYPE_LIST.find(t => t.value === item.trait_type)?.label || item.trait_type,
+        trait_value: item.trait_value,
+        trait_desc: item.trait_desc,
+      })) : null,
+      // 干部履历
+      career: careerData.length > 0 ? careerData.map(item => ({
+        info_type: item.info_type,
+        info_type_name: DYNAMIC_INFO_TYPE_OPTIONS.find(t => t.value === item.info_type)?.label || String(item.info_type),
+        remark: item.remark,
+        // 各类型的特定字段
+        ...(item.info_type === 1 && { training_name: item.training_name }),
+        ...(item.info_type === 2 && { project_name: item.project_name }),
+        ...(item.info_type === 3 && { assessment_cycle: item.assessment_cycle, assessment_grade: item.assessment_grade }),
+        ...(item.info_type === 4 && { reward_type: item.reward_type }),
+        ...(item.info_type === 5 && { position_name: item.position_name }),
+        ...(item.info_type === 6 && { work_company: item.work_company, work_position: item.work_position }),
+      })) : null,
+    };
+
+    // 构建AI提示词 - 面向干部个人的分析报告
+    const prompt = `你是一位资深的职业发展导师和人才成长顾问。请基于以下干部的完整数据，生成一份面向干部个人发展的分析报告。
+
+【干部数据JSON】
+${JSON.stringify(cadreData, null, 2)}
+
+【输出格式要求】
+请严格按照以下格式输出，每个维度必须完整呈现，指标内容可根据实际数据调整：
+
+📋 一、个人综合画像
+- 基本特征：（姓名、性别、年龄、学历、司龄、政治面貌等）
+- 性格特质：（基于特质分析，描述性格特点、管理风格、沟通风格）
+- 职业标签：（3-5个关键词概括个人特点）
+
+💪 二、能力深度解析
+✓ 核心优势：（3-5项最强能力，结合具体数据说明）
+⚠ 待提升项：（2-3项短板，分析对职业发展的影响）
+🎯 能力均衡度：（各维度能力均衡性分析及建议）
+
+📈 三、成长轨迹回顾
+- 职业历程：（工作经历和岗位变更梳理）
+- 能量积累：（培训、项目经历评估）
+- 成绩单：（绩效考核、项目评级、获奖情况）
+- 成长曲线：（判断处于上升期/平台期/转型期）
+
+🎯 四、岗位适配洞察
+- 当前适配度：（与现任岗位的匹配度及评价）
+- 发挥空间：（当前岗位是否充分发挥个人优势）
+- 潜在挑战：（能力与岗位要求的差距及应对）
+
+🚀 五、个人发展路径
+- 推荐方向：（2-3个适合个人特质的发展方向）
+- 发展路径：（每个方向的具体成长路径）
+- 关键能力：（每个方向需要重点培养的能力）
+
+📌 六、自我提升行动指南
+- 短期突破（6个月内）：
+  ✓ 目标1：（具体行动建议）
+  ✓ 目标2：（具体行动建议）
+- 中期成长（1-2年）：
+  ✓ 重点1：（能力提升计划）
+  ✓ 重点2：（发展机会把握）
+- 长期规划（3年+）：
+  ✓ 职业定位：（长期发展方向）
+  ✓ 持续学习：（需要持续投入的能力领域）
+
+💡 七、个性化建议
+- 学习建议：（基于个人特点的培训和学习方向）
+- 实践建议：（如何在工作中锻炼和提升）
+- 资源利用：（如何利用现有平台和机会）
+
+【内容要求】
+- 这是一份给干部个人看的报告，请站在个人发展角度给出建议
+- 每个维度必须完整输出，不得省略
+- 每个指标一行，以"-"、"✓"、"⚠"、"🎯"开头
+- 内容精炼，每点控制在1句话内，建议要具体可执行
+- 只输出分析结论，不要重复原始数据
+- 不要添加任何分隔线、装饰性内容
+- 直接给出确定性结论，不要说"信息不足"、"需要进一步分析"等
+- 不要出现"如果..."、"假设..."等假设性表述
+- 重点关注"我该怎么做"而非"组织该做什么"
+
+请严格按照上述格式开始分析：`;
+
+    try {
+      const response = await fetch('https://api.siliconflow.cn/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer sk-pjdyzooethndmyauyzjbopafxxqogayzhjopheijtwgkgras',
+        },
+        body: JSON.stringify({
+          model: 'Qwen/Qwen2.5-7B-Instruct',
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          stream: false,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      const aiMessage = result.choices?.[0]?.message?.content || '无法获取AI响应';
+      setAiResult(aiMessage);
+
+      // 保存AI分析结果到数据库
+      if (id) {
+        try {
+          await aiAnalysisApi.saveResult({
+            cadre_id: Number(id),
+            analysis_result: aiMessage,
+            analysis_data: JSON.stringify(cadreData),
+          });
+          message.success('AI分析完成');
+        } catch (saveError) {
+          console.error('Failed to save AI analysis:', saveError);
+          message.warning('AI分析完成，但保存失败');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to call AI API:', error);
+      setAiResult('AI分析请求失败，请稍后重试');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // 获取AI分析历史结果
+  const fetchAIAnalysisResult = async () => {
+    if (!id) return;
+    try {
+      // 直接使用 fetch 避免 axios 拦截器显示错误
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api'}/ai-analysis/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.code === 200 && result.data) {
+          setAiResult(result.data.analysis_result);
+        }
+      }
+      // 404 或其他错误时不做任何处理，不显示错误提示
+    } catch (error) {
+      // 静默处理错误
+      console.log('No AI analysis history found');
+    }
+  };
+
   const fetchData = async () => {
     if (!id) return;
     setLoading(true);
@@ -117,19 +340,13 @@ const CadreDetailNew = () => {
     }
   };
 
-  // 获取岗位匹配结果
-  const fetchMatchResult = async () => {
-    if (!id || !data?.position?.id) return;
-    fetchMatchResultByPosition(data.position.id);
-  };
-
   // 根据岗位ID获取匹配结果
   const fetchMatchResultByPosition = async (positionId: number) => {
     if (!id) return;
     try {
       const response = await matchApi.getResults({ cadre_id: Number(id), position_id: positionId });
       console.log('Match result response:', response);
-      const result = response.data.data?.items?.[0] || response.data.data?.[0] || response.data.data;
+      const result = response.data.data?.items?.[0];
       console.log('Parsed match result:', result);
       if (result) {
         setMatchResult(result);
@@ -148,6 +365,7 @@ const CadreDetailNew = () => {
       fetchAbilityData();
       fetchTraitData();
       fetchPositionList();
+      fetchAIAnalysisResult(); // 获取AI分析历史结果
     }
     // 检查是否来自匹配分析页面
     if (location.state?.fromMatch) {
@@ -730,19 +948,83 @@ const CadreDetailNew = () => {
       children: (
         <div className="ai-analysis-content">
           <div className="info-card ai-card">
-            <div className="card-header">
-              <RobotOutlined className="card-icon" />
-              <h3 className="card-title">AI智能分析</h3>
-            </div>
-            <div className="card-body">
-              <div className="ai-placeholder">
-                <RobotOutlined />
-                <p>AI分析功能即将上线，敬请期待</p>
-                <Button type="primary" size="large" icon={<RobotOutlined />}>
-                  启动AI分析
-                </Button>
-              </div>
-            </div>
+            {aiResult ? (
+              // 有分析结果时，按钮在header
+              <>
+                <div className="card-header">
+                  <RobotOutlined className="card-icon" />
+                  <h3 className="card-title">AI智能分析</h3>
+                  <Button
+                    type="primary"
+                    icon={<RobotOutlined />}
+                    onClick={handleAIAnalysis}
+                    loading={aiLoading}
+                  >
+                    重新分析
+                  </Button>
+                </div>
+                <div className="card-body">
+                  {aiLoading ? (
+                    <div className="ai-loading-container">
+                      <div className="ai-loading-icon">
+                        <RobotOutlined />
+                      </div>
+                      <h4 className="ai-loading-title">AI正在分析中...</h4>
+                      <p className="ai-loading-desc">正在综合评估您的能力、特质和发展潜力，请稍候</p>
+                      <div className="ai-loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ai-result-content">
+                      <div className="ai-result-text">{aiResult}</div>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              // 无分析结果时，按钮在内容区域
+              <>
+                <div className="card-header">
+                  <RobotOutlined className="card-icon" />
+                  <h3 className="card-title">AI智能分析</h3>
+                </div>
+                <div className="card-body">
+                  {aiLoading ? (
+                    <div className="ai-loading-container">
+                      <div className="ai-loading-icon">
+                        <RobotOutlined />
+                      </div>
+                      <h4 className="ai-loading-title">AI正在分析中...</h4>
+                      <p className="ai-loading-desc">正在综合评估您的能力、特质和发展潜力，请稍候</p>
+                      <div className="ai-loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ai-intro-container">
+                      <Button
+                        type="primary"
+                        icon={<RobotOutlined />}
+                        onClick={handleAIAnalysis}
+                        loading={aiLoading}
+                        size="large"
+                        className="ai-start-btn"
+                      >
+                        启动AI分析
+                      </Button>
+                      <p className="ai-intro-desc">
+                        基于您的基本信息、能力评估、特质分析和成长履历，AI将为您生成一份个性化的职业发展分析报告，帮助您深入了解自身优势、发现提升空间、规划发展路径。
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       ),

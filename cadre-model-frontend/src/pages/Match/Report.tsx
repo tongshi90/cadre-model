@@ -23,11 +23,15 @@ const MatchReport = () => {
     try {
       // 获取匹配结果
       const resultResponse = await matchApi.getResultDetail(Number(id));
-      setResult(resultResponse.data.data);
+      if (resultResponse.data.data) {
+        setResult(resultResponse.data.data);
+      }
 
       // 获取分析报告
       const reportResponse = await matchApi.generateReport(Number(id));
-      setReport(reportResponse.data.data);
+      if (reportResponse.data.data) {
+        setReport(reportResponse.data.data);
+      }
     } catch (error) {
       console.error('Failed to fetch match report:', error);
     } finally {

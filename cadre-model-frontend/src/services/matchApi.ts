@@ -21,7 +21,15 @@ export const matchApi = {
   // 批量计算干部当前岗位匹配度
   batchCalculateCurrent: () =>
     apiClient.post<ApiResponse<{ total: number; results: MatchResult[] }>>(
-      '/match/batch-calculate-current'
+      '/match/batch-calculate-current',
+      {},
+      { timeout: 300000 }  // 设置超时时间为 5 分钟
+    ),
+
+  // 获取当前岗位匹配分析进度
+  getCurrentPositionProgress: () =>
+    apiClient.get<ApiResponse<{ current: number; total: number }>>(
+      '/match/current-position-progress'
     ),
 
   // 批量计算多个干部与岗位的匹配度（自定义匹配）
@@ -110,4 +118,14 @@ export const matchApi = {
       '/match/flow-cadres-details',
       { params }
     ),
+
+  // 获取大屏所有数据（合并接口 - 优化性能）
+  getDashboardAll: () =>
+    apiClient.get<ApiResponse<{
+      match_statistics: MatchStatistics;
+      age_structure: PyramidStatistics;
+      position_risk: any[];
+      quality_portrait: any[];
+      source_and_flow: SourceAndFlowStatistics;
+    }>>('/match/dashboard-all'),
 };

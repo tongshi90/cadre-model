@@ -18,8 +18,10 @@ const PositionEdit = () => {
       try {
         const response = await positionApi.getDetail(Number(id));
         const position = response.data.data;
-        setData(position);
-        form.setFieldsValue(position);
+        if (position) {
+          setData(position);
+          form.setFieldsValue(position);
+        }
       } catch (error) {
         console.error('Failed to fetch position:', error);
       }
@@ -33,7 +35,7 @@ const PositionEdit = () => {
     try {
       await positionApi.update(Number(id), values);
       message.success('更新成功');
-      navigate(`/position/${id}`);
+      navigate(`/position/${id}`, { replace: true });
     } catch (error) {
       console.error('Failed to update position:', error);
     } finally {

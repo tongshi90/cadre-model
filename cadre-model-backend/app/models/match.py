@@ -6,7 +6,13 @@ import json
 class MatchResult(db.Model):
     """匹配结果表"""
     __tablename__ = 'match_result'
-    __table_args__ = {'mysql_engine': 'InnoDB', 'mysql_comment': '匹配结果表-存储干部与岗位的匹配分析结果'}
+    __table_args__ = (
+        db.Index('idx_cadre_position', 'cadre_id', 'position_id'),
+        db.Index('idx_create_time', 'create_time'),
+        db.Index('idx_final_score', 'final_score'),
+        db.Index('idx_match_level', 'match_level'),
+        {'mysql_engine': 'InnoDB', 'mysql_comment': '匹配结果表-存储干部与岗位的匹配分析结果'}
+    )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     position_id = db.Column(db.Integer, db.ForeignKey('position_info.id'), nullable=False, comment='岗位ID')
@@ -17,11 +23,14 @@ class MatchResult(db.Model):
     match_level = db.Column(db.String(20), comment='匹配等级：excellent-优质(>=80)，qualified-合格(>=60)，unqualified-不合格(<60)')
     is_meet_mandatory = db.Column(db.Integer, default=1, comment='是否满足硬性要求：1-是，0-否')
     match_detail = db.Column(db.Text, comment='匹配详情(JSON格式)')
+    best_match_position_id = db.Column(db.Integer, db.ForeignKey('position_info.id'), comment='最高匹配岗位ID（干部当前岗位匹配时计算）')
+    best_match_score = db.Column(db.Float, comment='最高匹配得分（干部当前岗位匹配时计算）')
     create_time = db.Column(db.DateTime, default=datetime.now, comment='创建时间')
 
     # 关系
     cadre = db.relationship('CadreBasicInfo', backref='match_results')
-    position = db.relationship('PositionInfo', backref='match_results')
+    position = db.relationship('PositionInfo', backref='match_results', foreign_keys=[position_id])
+    best_match_position = db.relationship('PositionInfo', foreign_keys=[best_match_position_id])
     reports = db.relationship('MatchReport', backref='match_result', cascade='all, delete-orphan')
 
     def to_dict(self):
@@ -39,10 +48,13 @@ class MatchResult(db.Model):
             'match_level': self.match_level,
             'is_meet_mandatory': self.is_meet_mandatory,
             'match_detail': json.loads(self.match_detail) if self.match_detail else None,
+            'best_match_position_id': self.best_match_position_id,
+            'best_match_score': self.best_match_score,
             'create_time': self.create_time.isoformat() if self.create_time else None,
             # 关联数据
             'cadre': cadre.to_dict() if cadre else None,
-            'position': position.to_dict() if position else None
+            'position': position.to_dict() if position else None,
+            'best_match_position': self.best_match_position.to_dict() if self.best_match_position else None
         }
 
 

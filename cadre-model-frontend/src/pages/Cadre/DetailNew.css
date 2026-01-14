@@ -1363,6 +1363,86 @@
   max-height: none;
 }
 
+/* AI智能分析卡片标题栏样式 */
+.ai-card .card-header {
+  justify-content: space-between;
+  position: relative;
+  padding: 16px 20px;
+  min-height: 60px;
+}
+
+.ai-card .card-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* AI智能分析卡片标题栏按钮样式 */
+.ai-card .card-header .ant-btn {
+  height: 32px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%);
+  border: none;
+  color: var(--color-bg-primary);
+  transition: all 0.2s ease;
+}
+
+.ai-card .card-header .ant-btn:hover {
+  background: linear-gradient(135deg, #e6c248 0%, #d4af37 100%);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  transform: translateY(-1px);
+}
+
+.ai-card .card-header .ant-btn .anticon {
+  font-size: 13px;
+}
+
+/* AI分析介绍页面样式 */
+.ai-intro-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  min-height: 400px;
+  gap: 24px;
+}
+
+.ai-start-btn {
+  height: 48px !important;
+  padding: 0 40px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, var(--color-accent-gold) 0%, #b8941f 100%) !important;
+  border: none !important;
+  color: var(--color-bg-primary) !important;
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.25);
+  transition: all 0.3s ease !important;
+}
+
+.ai-start-btn:hover {
+  background: linear-gradient(135deg, #e6c248 0%, #d4af37 100%) !important;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.4) !important;
+  transform: translateY(-2px) !important;
+}
+
+.ai-start-btn .anticon {
+  font-size: 16px !important;
+}
+
+.ai-intro-desc {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text-secondary);
+  max-width: 520px;
+  margin: 0;
+}
+
 .ai-placeholder {
   display: flex;
   flex-direction: column;
@@ -1383,6 +1463,136 @@
   font-size: 16px;
   color: var(--color-text-tertiary);
   margin-bottom: 32px;
+}
+
+/* AI加载动画样式 */
+.ai-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+  min-height: 400px;
+  gap: 20px;
+}
+
+.ai-loading-icon {
+  width: 120px;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0.08) 100%);
+  border: 3px solid rgba(212, 175, 55, 0.4);
+  border-radius: 50%;
+  animation: ai-loading-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+}
+
+.ai-loading-icon .anticon {
+  font-size: 56px;
+  color: var(--color-accent-gold);
+  animation: ai-loading-bounce 2s ease-in-out infinite;
+}
+
+.ai-loading-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+  animation: ai-loading-fade 2s ease-in-out infinite;
+}
+
+.ai-loading-desc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  max-width: 400px;
+  margin: 0;
+}
+
+.ai-loading-dots {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ai-loading-dots span {
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent-gold);
+  border-radius: 50%;
+  animation: ai-loading-dot 1.4s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+.ai-loading-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.ai-loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.ai-loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* 加载动画关键帧 */
+@keyframes ai-loading-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 60px rgba(212, 175, 55, 0.5);
+  }
+}
+
+@keyframes ai-loading-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes ai-loading-fade {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes ai-loading-dot {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+/* AI分析结果样式 */
+.ai-result-content {
+  padding: 24px;
+  height: 100%;
+}
+
+.ai-result-text {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--color-text-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .ai-placeholder .ant-btn {

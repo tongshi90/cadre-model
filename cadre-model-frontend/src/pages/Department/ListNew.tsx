@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal, Form, Input, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, ApartmentOutlined, CaretRightOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, CaretRightOutlined } from '@ant-design/icons';
 import { departmentApi } from '@/services/departmentApi';
 import './ListNew.css';
 
@@ -11,6 +11,7 @@ interface Department {
   sort_order: number;
   status: number;
   description?: string;
+  employee_count?: number;
   children?: Department[];
 }
 
@@ -31,10 +32,10 @@ const DepartmentListNew = () => {
     try {
       const response = await departmentApi.getTree();
       const data = response.data.data || [];
-      // 添加根节点 "全部"
+      // 添加根节点 "全部部门"
       const rootData: Department = {
         id: 0,
-        name: '全部',
+        name: '全部部门',
         parent_id: null,
         sort_order: 0,
         status: 1,
@@ -70,6 +71,7 @@ const DepartmentListNew = () => {
     form.setFieldsValue({
       name: node.name,
       description: node.description,
+      employee_count: node.employee_count,
     });
     setModalVisible(true);
   };
@@ -98,10 +100,16 @@ const DepartmentListNew = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      // 处理 employee_count：转换为数字，空值设为 0
+      const employeeCount = values.employee_count
+        ? parseInt(values.employee_count, 10)
+        : 0;
+
       if (modalMode === 'edit' && currentNode) {
         await departmentApi.update(currentNode.id, {
           name: values.name,
           description: values.description,
+          employee_count: employeeCount,
         });
         message.success('更新成功');
       } else {
@@ -109,6 +117,7 @@ const DepartmentListNew = () => {
           name: values.name,
           parent_id: parentId,
           description: values.description,
+          employee_count: employeeCount,
           sort_order: 0,
         });
         message.success('创建成功');
@@ -144,7 +153,6 @@ const DepartmentListNew = () => {
     const isHovered = hoveredNodeId === node.id;
     const isRoot = node.id === 0;
     const hasChildren = node.children && node.children.length > 0;
-    const childCount = countChildren(node);
     const isExpanded = expandedKeys.has(node.id);
 
     return (
@@ -267,6 +275,37 @@ const DepartmentListNew = () => {
               </span>
             </div>
           )}
+
+          <Form.Item
+            label="员工数量"
+            name="employee_count"
+            rules={[
+              {
+                validator(_, value) {
+                  // 允许为空
+                  if (value === undefined || value === null || value === '') {
+                    return Promise.resolve();
+                  }
+                  // 转换为数字
+                  const num = Number(value);
+                  // 必须是整数
+                  if (!Number.isInteger(num)) {
+                    return Promise.reject(new Error('员工数量必须是整数'));
+                  }
+                  // 必须大于0
+                  if (num <= 0) {
+                    return Promise.reject(new Error('员工数量必须大于0'));
+                  }
+                  return Promise.resolve();
+                },
+              },
+            ]}
+          >
+            <Input
+              type="text"
+              placeholder="请输入员工数量（选填）"
+            />
+          </Form.Item>
 
           <Form.Item label="描述" name="description">
             <Input.TextArea

@@ -2,8 +2,16 @@ import axios, { AxiosError } from 'axios';
 import { message } from 'antd';
 import type { ApiResponse } from '@/types';
 
+// 从运行时配置获取 API 地址，fallback 到环境变量或默认值
+const getApiBaseUrl = () => {
+  if (window.config?.API_BASE_URL) {
+    return window.config.API_BASE_URL;
+  }
+  return import.meta.env.VITE_API_BASE_URL || '/api';
+};
+
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: getApiBaseUrl(),
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

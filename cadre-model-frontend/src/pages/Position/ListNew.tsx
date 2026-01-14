@@ -4,12 +4,10 @@ import {
   PlusOutlined,
   TrophyOutlined,
   EditOutlined,
-  DeleteOutlined,
-  TeamOutlined
+  DeleteOutlined
 } from '@ant-design/icons';
-import { Input, Select, Button, Popconfirm, message, Pagination } from 'antd';
+import { Input, Button, Popconfirm, message, Pagination } from 'antd';
 import ScrollReveal from '@/components/ui/ScrollReveal';
-import CardGrid from '@/components/ui/CardGrid';
 import { positionApi } from '@/services/positionApi';
 import type { PositionInfo } from '@/types';
 import './ListNew.css';
@@ -23,19 +21,24 @@ const PositionListNew = () => {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
-  const [positionName, setPositionName] = useState('');
   const prevPageRef = useRef<number>(1);
 
-  const fetchData = async () => {
+  const fetchData = async (keyword?: string) => {
     const isPageChange = prevPageRef.current !== page;
     setLoading(true);
     try {
-      const response = await positionApi.getList({
+      const params: any = {
         page,
         page_size: pageSize,
-        position_name: positionName || undefined,
-      });
+      };
+      // 如果有搜索关键字，添加到参数中
+      if (keyword) {
+        params.position_name = keyword;
+      }
+
+      const response = await positionApi.getList(params);
       setData(response.data.data?.items || []);
       setTotal(response.data.data?.total || 0);
       setIsInitialLoad(false);
@@ -56,18 +59,16 @@ const PositionListNew = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    fetchData(searchKeyword);
   }, [page, pageSize]);
 
-  const handleSearch = () => {
+  const handleSearch = (value: string) => {
+    setSearchKeyword(value);
     setPage(1);
-    fetchData();
-  };
-
-  const handleReset = () => {
-    setPositionName('');
-    setPage(1);
-    fetchData();
+    // 立即使用新的搜索关键字获取数据
+    setTimeout(() => {
+      fetchData(value);
+    }, 0);
   };
 
   const handleDelete = async (id: number) => {
@@ -88,7 +89,7 @@ const PositionListNew = () => {
   };
 
   // Position card component
-  const PositionCard = ({ position, index }: { position: PositionInfo; index: number }) => {
+  const PositionCard = ({ position }: { position: PositionInfo }) => {
     const statusConfig = {
       1: { label: '启用中', color: '#4ade80', bg: 'rgba(74, 222, 128, 0.15)' },
       0: { label: '已停用', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.15)' },
@@ -137,17 +138,21 @@ const PositionListNew = () => {
           <div className="position-card-icon">
             <TrophyOutlined />
           </div>
-          <span className="position-card-status" style={{ color: statusInfo.color, background: statusInfo.bg }}>
-            {statusInfo.label}
-          </span>
+          <div className="position-card-tags">
+            {position.is_key_position && (
+              <span className="position-card-key-tag">
+                关键岗位
+              </span>
+            )}
+            <span className="position-card-status" style={{ color: statusInfo.color, background: statusInfo.bg }}>
+              {statusInfo.label}
+            </span>
+          </div>
         </div>
 
         {/* Card Content */}
         <h3 className="position-card-name">
           {position.position_name}
-          {position.is_key_position && (
-            <span className="position-card-key-badge">关键岗位</span>
-          )}
         </h3>
 
         {/* 岗位职责 */}
@@ -173,7 +178,6 @@ const PositionListNew = () => {
                 size="large"
                 className="search-input"
                 onSearch={handleSearch}
-                onChange={(e) => setPositionName(e.target.value)}
                 onPressEnter={handleSearch}
               />
             </div>
@@ -204,8 +208,8 @@ const PositionListNew = () => {
           ) : (
             <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-                {data.map((position, index) => (
-                  <PositionCard key={`${position.id}-${page}`} position={position} index={index} />
+                {data.map((position) => (
+                  <PositionCard key={`${position.id}-${page}`} position={position} />
                 ))}
               </div>
 

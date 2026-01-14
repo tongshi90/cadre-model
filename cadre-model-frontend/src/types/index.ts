@@ -129,6 +129,7 @@ export interface PositionInfo {
   position_name: string;
   responsibility?: string;
   status: number;
+  is_key_position?: number;
   create_time?: string;
   update_time?: string;
   create_by?: string;
@@ -154,9 +155,12 @@ export interface MatchResult {
   match_level?: string;
   is_meet_mandatory?: number;
   match_detail?: string;
+  best_match_position_id?: number;
+  best_match_score?: number;
   create_time?: string;
   cadre?: CadreBasicInfo;
   position?: PositionInfo;
+  best_match_position?: PositionInfo;
 }
 
 export interface MatchLevelDistribution {

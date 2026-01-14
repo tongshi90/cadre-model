@@ -33,6 +33,7 @@ class DepartmentService:
                 'sort_order': dept.sort_order,
                 'status': dept.status,
                 'description': dept.description,
+                'employee_count': dept.employee_count,
             }
             dept_map[dept.id] = dept_dict
 

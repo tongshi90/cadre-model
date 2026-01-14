@@ -165,6 +165,18 @@ def batch_calculate_current_position():
         return error_response(str(e), 500)
 
 
+@match_bp.route('/match/current-position-progress', methods=['GET'])
+@token_required
+@log_operation('match', 'query')
+def get_current_position_progress():
+    """获取当前岗位匹配分析进度"""
+    try:
+        progress = MatchService.get_current_position_match_progress()
+        return success_response(progress, '获取成功')
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
 @match_bp.route('/match/statistics', methods=['GET'])
 @token_required
 @log_operation('match', 'query')
@@ -248,5 +260,17 @@ def get_flow_cadres_details():
 
         result = MatchService.get_flow_cadres_details(year, source_type)
         return success_response(result, '获取成功')
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
+@match_bp.route('/match/dashboard-all', methods=['GET'])
+@token_required
+@log_operation('match', 'query')
+def get_dashboard_all_data():
+    """获取大屏所有数据（合并接口 - 优化性能）"""
+    try:
+        data = MatchService.get_dashboard_all_data()
+        return success_response(data, '获取成功')
     except Exception as e:
         return error_response(str(e), 500)

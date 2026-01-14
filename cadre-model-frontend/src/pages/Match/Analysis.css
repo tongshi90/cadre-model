@@ -576,6 +576,63 @@ body .ant-tree-select-dropdown .ant-tree-switcher-line-icon {
 }
 
 /* ============================================
+   分析进度显示
+   ============================================ */
+
+.analysis-progress {
+  padding: var(--spacing-8) var(--spacing-6);
+  margin-bottom: var(--spacing-4);
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-6);
+  text-align: center;
+  width: 100%;
+}
+
+.progress-title {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.progress-bar {
+  width: 100%;
+  max-width: 700px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  max-width: 700px;
+}
+
+.progress-text {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+.progress-text strong {
+  color: var(--color-accent-gold);
+  font-weight: var(--font-semibold);
+}
+
+.progress-remaining {
+  font-size: var(--text-sm);
+  color: var(--color-text-tertiary);
+}
+
+/* ============================================
    加载状态
    ============================================ */
 

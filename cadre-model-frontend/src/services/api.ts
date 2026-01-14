@@ -76,5 +76,20 @@ export const departmentApi = {
     apiClient.delete<ApiResponse>(`/departments/${id}`),
 };
 
+// AI分析API
+export const aiAnalysisApi = {
+  // 获取干部的AI分析结果
+  getResult: (cadreId: number) =>
+    apiClient.get<ApiResponse<any>>(`/ai-analysis/${cadreId}`),
+
+  // 保存AI分析结果
+  saveResult: (data: {
+    cadre_id: number;
+    analysis_result: string;
+    analysis_data?: string;
+  }) =>
+    apiClient.post<ApiResponse<any>>('/ai-analysis', data),
+};
+
 // 导出matchApi
 export { matchApi } from './matchApi';

@@ -18,35 +18,27 @@ def create_app(config_name='default'):
 
     # Initialize extensions
     db.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app)
 
-    # Handle OPTIONS requests before authentication
-    @app.before_request
-    def handle_options():
-        from flask import request
-        if request.method == 'OPTIONS':
-            response = app.make_default_options_response()
-            response.headers['Access-Control-Allow-Origin'] = '*'
-            response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-            response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
-            response.headers['Access-Control-Allow-Credentials'] = 'true'
-            return response
+    # Configure CORS
+    # 支持通过环境变量 FRONTEND_URL 配置，多个地址用逗号分隔
+    # 默认允许所有源（开发环境），生产环境建议配置具体的前端地址
+    cors_origins = os.environ.get('FRONTEND_URL', '*').split(',')
+
+    CORS(app,
+         resources={r"/api/*": {"origins": cors_origins}},
+         supports_credentials=True,
+         allow_headers=['Content-Type', 'Authorization'],
+         methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+         expose_headers=['Content-Type', 'Authorization'])
 
     # Register API blueprints
-    from app.api import cadre_bp, position_bp, match_bp, system_bp
+    from app.api import cadre_bp, position_bp, match_bp, system_bp, ai_analysis_bp
     app.register_blueprint(cadre_bp, url_prefix='/api')
     app.register_blueprint(position_bp, url_prefix='/api')
     app.register_blueprint(match_bp, url_prefix='/api')
     app.register_blueprint(system_bp, url_prefix='/api')
-
-    # Configure CORS using after_request
-    @app.after_request
-    def after_request(response):
-        response.headers['Access-Control-Allow-Origin'] = '*'
-        response.headers['Access-Control-Allow-Headers'] = 'Content-Type,Authorization'
-        response.headers['Access-Control-Allow-Methods'] = 'GET,PUT,POST,DELETE,OPTIONS'
-        response.headers['Access-Control-Allow-Credentials'] = 'true'
-        return response
+    app.register_blueprint(ai_analysis_bp, url_prefix='/api')
 
     # Register error handlers
     from app.utils.handlers import register_error_handlers

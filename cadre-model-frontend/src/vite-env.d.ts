@@ -8,3 +8,14 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }
+
+// 运行时配置类型声明
+declare global {
+  interface Window {
+    config?: {
+      API_BASE_URL: string;
+    };
+  }
+}
+
+export {};

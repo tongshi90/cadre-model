@@ -321,7 +321,7 @@
   position: relative;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 12px;
 }
 
@@ -335,6 +335,14 @@
   border-radius: 14px;
   color: var(--color-bg-primary);
   font-size: 22px;
+  flex-shrink: 0;
+}
+
+.position-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
 }
 
 .position-card-status {
@@ -342,7 +350,16 @@
   border-radius: 16px;
   font-size: 12px;
   font-weight: 600;
-  margin-top: 28px;
+}
+
+.position-card-key-tag {
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
+  color: var(--color-accent-gold);
+  border: 1px solid rgba(212, 175, 55, 0.4);
 }
 
 .position-card-key-badge {

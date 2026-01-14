@@ -108,8 +108,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
-  margin-bottom: 4px;
+  padding: 6px 12px;
+  margin-bottom: 2px;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -127,11 +127,11 @@
 .tree-item.root-item {
   background: rgba(212, 175, 55, 0.1);
   border: 1px solid rgba(212, 175, 55, 0.2);
-  margin-bottom: 12px;
+  margin-bottom: 6px;
 }
 
 .tree-item.root-item .tree-label.root-label {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--color-accent-gold);
 }
@@ -295,6 +295,17 @@
 .dept-modal .ant-input-textarea:focus {
   border-color: var(--color-accent-gold);
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+/* 隐藏 number input 的上下箭头 */
+.dept-modal input[type='number']::-webkit-outer-spin-button,
+.dept-modal input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dept-modal input[type='number'] {
+  -moz-appearance: textfield;
 }
 
 /* 上级部门信息 */

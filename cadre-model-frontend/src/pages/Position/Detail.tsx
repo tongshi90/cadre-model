@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Modal, Form, Input, InputNumber, Select, message, Tabs, Table } from 'antd';
+import { Modal, Form, Input, InputNumber, Select, message, Tabs, Table } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, TrophyOutlined, SettingOutlined, BulbOutlined } from '@ant-design/icons';
 import { positionApi } from '@/services/positionApi';
 import type { PositionInfo } from '@/types';
@@ -10,7 +10,6 @@ import './Detail.css';
 const PositionDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState<PositionInfo | null>(null);
 
   // 能力权重相关
@@ -40,14 +39,11 @@ const PositionDetail = () => {
 
   const fetchData = async () => {
     if (!id) return;
-    setLoading(true);
     try {
       const response = await positionApi.getDetail(Number(id));
       setData(response.data.data || null);
     } catch (error) {
       console.error('Failed to fetch position detail:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

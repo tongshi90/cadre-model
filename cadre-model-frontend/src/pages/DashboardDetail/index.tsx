@@ -3,10 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeftOutlined,
   BarChartOutlined,
-  SafetyOutlined,
-  TeamOutlined,
-  TrophyOutlined,
-  RocketOutlined,
   UserOutlined,
   ApartmentOutlined,
   CaretRightOutlined,
@@ -122,15 +118,6 @@ const DashboardDetail = () => {
 
   const [riskData, setRiskData] = useState<any[]>([]);
   const [qualityData, setQualityData] = useState<any[]>([]);
-  const [sourceAndFlowData, setSourceAndFlowData] = useState<any>({
-    total_count: 0,
-    source_distribution: {
-      internal: { count: 0, percentage: 0, label: '内部培养' },
-      external: { count: 0, percentage: 0, label: '外部引进' }
-    },
-    source_by_level: [],
-    flow_trend: []
-  });
 
   // 流动干部详情数据
   const [flowCadresData, setFlowCadresData] = useState<{
@@ -152,12 +139,11 @@ const DashboardDetail = () => {
           ? matchApi.getAgeStructureDetails()
           : matchApi.getAgeStructure();
 
-        const [matchStats, pyramidStats, risk, quality, sourceFlow, matchResults, flowCadres] = await Promise.all([
+        const [matchStats, pyramidStats, risk, quality, matchResults, flowCadres] = await Promise.all([
           matchApi.getStatistics(),
           pyramidApiCall,
           matchApi.getPositionRisk(),
           matchApi.getQualityPortrait(),
-          matchApi.getSourceAndFlow(),
           matchApi.getCurrentPositionResults(),
           matchApi.getFlowCadresDetails(),
         ]);
@@ -166,7 +152,6 @@ const DashboardDetail = () => {
         if (pyramidStats.data?.data) setPyramidStatistics(pyramidStats.data.data);
         if (risk.data?.data) setRiskData(risk.data.data);
         if (quality.data?.data) setQualityData(quality.data.data);
-        if (sourceFlow.data?.data) setSourceAndFlowData(sourceFlow.data.data);
         if (matchResults.data?.data) setMatchResults(matchResults.data.data);
         if (flowCadres.data?.data) setFlowCadresData(flowCadres.data.data);
       } catch (error) {
@@ -551,7 +536,7 @@ const DashboardDetail = () => {
             </div>
           ),
         };
-      }).filter(Boolean);
+      }).filter((item): item is NonNullable<typeof item> => item !== null);
 
       return {
         key: levelKey,
@@ -587,7 +572,7 @@ const DashboardDetail = () => {
           </div>
         ),
       };
-    }).filter(Boolean);
+    }).filter((item): item is NonNullable<typeof item> => item !== null);
 
     return (
       <div className="detail-content">

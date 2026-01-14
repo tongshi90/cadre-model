@@ -157,9 +157,13 @@
   text-align: left !important;
 }
 
-/* 隐藏 InputNumber 的增减按钮相关样式 */
+/* InputNumber 上下按钮一直显示 */
 .form-card .ant-input-number-handler-wrap {
-  display: none !important;
+  opacity: 1 !important;
+}
+
+.form-card .ant-input-number-handler {
+  opacity: 1 !important;
 }
 
 /* Select 统一样式 */
@@ -400,6 +404,13 @@
 /* 错误提示 */
 .form-card .ant-form-item-explain-error {
   color: var(--color-error);
+}
+
+/* 学生兵级届字段缩短20px并靠右对齐 */
+.form-card .student-soldier-class-item .ant-form-item-control {
+  max-width: calc(100% - 65px - 20px);
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* 响应式 */

@@ -326,21 +326,21 @@ const DashboardScreen = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [matchStats, pyramidStats, risk, quality, sourceFlow, deptTree, positions] = await Promise.all([
-          matchApi.getStatistics(),
-          matchApi.getAgeStructure(),
-          matchApi.getPositionRisk(),
-          matchApi.getQualityPortrait(),
-          matchApi.getSourceAndFlow(),
+        // 使用合并的大屏数据 API 接口（优化性能）
+        const [dashboardData, deptTree, positions] = await Promise.all([
+          matchApi.getDashboardAll(),
           departmentApi.getTree(),
           positionApi.getAll(),
         ]);
 
-        if (matchStats.data?.data) setMatchStatistics(matchStats.data.data);
-        if (pyramidStats.data?.data) setPyramidStatistics(pyramidStats.data.data);
-        if (risk.data?.data) setRiskData(risk.data.data);
-        if (quality.data?.data) setQualityData(quality.data.data);
-        if (sourceFlow.data?.data) setSourceAndFlowData(sourceFlow.data.data);
+        if (dashboardData.data?.data) {
+          const data = dashboardData.data.data;
+          if (data.match_statistics) setMatchStatistics(data.match_statistics);
+          if (data.age_structure) setPyramidStatistics(data.age_structure);
+          if (data.position_risk) setRiskData(data.position_risk);
+          if (data.quality_portrait) setQualityData(data.quality_portrait);
+          if (data.source_and_flow) setSourceAndFlowData(data.source_and_flow);
+        }
         if (deptTree.data?.data) setDepartmentTree(deptTree.data.data);
         if (positions.data?.data) setPositionCount(positions.data.data.length);
       } catch (error) {
@@ -685,14 +685,7 @@ const DashboardScreen = () => {
     <div className="dashboard-screen">
       {/* 标题栏 */}
       <div className="screen-header">
-        <div
-          className="screen-header-left clickable"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            window.open('/dashboard_temp', '_blank');
-          }}
-        >
+        <div className="screen-header-left">
           <div className="screen-logo">
             <ApartmentOutlined />
           </div>

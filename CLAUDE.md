@@ -51,6 +51,10 @@ python init_db.py
 # 强制重新初始化数据库（删除所有表并重建）
 python init_db.py --force
 
+# 创建性能优化索引（重要！）
+# 创建数据库后，需要手动执行以下 SQL 创建索引
+# 见下方"性能优化"章节
+
 # 启动开发服务器
 python run.py
 # 服务器运行在 http://localhost:5000
@@ -151,12 +155,14 @@ app/
 ```
 src/
 ├── pages/         # 页面层 - 功能页面组件
-│   ├── Login/         # 登录页
-│   ├── Home/          # 首页
-│   ├── Cadre/         # 干部管理页面
-│   ├── Position/      # 岗位管理页面
-│   ├── Department/    # 部门管理页面
-│   └── Match/         # 匹配分析页面
+│   ├── Login/              # 登录页
+│   ├── Home/               # 首页
+│   ├── DashboardScreen/    # 数据大屏
+│   ├── DashboardDetail/    # 大屏下钻详情页
+│   ├── Cadre/              # 干部管理页面
+│   ├── Position/           # 岗位管理页面
+│   ├── Department/         # 部门管理页面
+│   └── Match/              # 匹配分析页面
 │
 ├── components/    # 组件层 - 通用 UI 组件
 │   ├── Header/        # 头部导航
@@ -169,6 +175,12 @@ src/
 ├── store/         # 状态管理
 │   └── slices/
 │       └── authSlice.ts   # 认证状态（持久化到 localStorage）
+│
+├── services/      # API 服务层
+│   ├── api.ts          # 基础 API 客户端
+│   ├── matchApi.ts     # 匹配相关 API
+│   ├── cadreApi.ts     # 干部相关 API
+│   └── ...
 │
 └── assets/
     └── styles/
@@ -271,6 +283,21 @@ Authorization: Bearer <token>
 - 如果只选择了部门，则分析该部门下的所有干部
 - 干部选择的优先级高于部门选择
 
+### 数据大屏 API
+
+| 方法 | 端点 | 说明 |
+|------|------|------|
+| GET | `/api/match/dashboard-all` | 获取大屏所有数据（合并接口，推荐使用） |
+| GET | `/api/match/statistics` | 获取匹配度统计数据 |
+| GET | `/api/match/age-structure` | 获取梯队与年龄结构统计 |
+| GET | `/api/match/position-risk` | 获取岗位风险分析数据 |
+| GET | `/api/match/quality-portrait` | 获取干部质量画像数据 |
+| GET | `/api/match/source-and-flow` | 获取干部来源与流动统计 |
+
+**大屏数据说明：**
+- 推荐使用 `/api/match/dashboard-all` 合并接口，一次请求获取所有数据
+- 各独立接口保留用于下钻详情页获取特定数据
+
 ### 系统管理 API
 
 | 方法 | 端点 | 说明 |
@@ -297,6 +324,67 @@ Authorization: Bearer <token>
    - `excellent` - 优质匹配 (>=80 分)
    - `qualified` - 合格匹配 (>=60 分)
    - `unqualified` - 不合格匹配 (<60 分)
+
+---
+
+## 性能优化
+
+### 数据库索引
+
+为确保查询性能，以下表已配置索引：
+
+**match_result 表：**
+- `idx_cadre_position` - (cadre_id, position_id) 复合索引
+- `idx_create_time` - create_time 索引
+- `idx_final_score` - final_score 索引
+- `idx_match_level` - match_level 索引
+
+**cadre_dynamic_info 表：**
+- `idx_cadre_info_type` - (cadre_id, info_type) 复合索引
+- `idx_cadre_info_type_time` - (cadre_id, info_type, create_time) 复合索引
+- `idx_cadre_type_grade` - (cadre_id, info_type, assessment_grade) 复合索引
+
+**cadre_basic_info 表：**
+- `idx_status_position` - (status, position_id) 复合索引
+- `idx_status_department` - (status, department_id) 复合索引
+- `idx_management_level` - management_level 索引
+
+### 创建索引 SQL
+
+如果数据库表已存在，需要手动执行以下 SQL 创建索引：
+
+```sql
+-- match_result 表索引
+ALTER TABLE match_result ADD INDEX idx_cadre_position (cadre_id, position_id);
+ALTER TABLE match_result ADD INDEX idx_create_time (create_time);
+ALTER TABLE match_result ADD INDEX idx_final_score (final_score);
+ALTER TABLE match_result ADD INDEX idx_match_level (match_level);
+
+-- cadre_dynamic_info 表索引
+ALTER TABLE cadre_dynamic_info ADD INDEX idx_cadre_info_type (cadre_id, info_type);
+ALTER TABLE cadre_dynamic_info ADD INDEX idx_cadre_info_type_time (cadre_id, info_type, create_time);
+ALTER TABLE cadre_dynamic_info ADD INDEX idx_cadre_type_grade (cadre_id, info_type, assessment_grade);
+
+-- cadre_basic_info 表索引
+ALTER TABLE cadre_basic_info ADD INDEX idx_status_position (status, position_id);
+ALTER TABLE cadre_basic_info ADD INDEX idx_status_department (status, department_id);
+ALTER TABLE cadre_basic_info ADD INDEX idx_management_level (management_level);
+```
+
+### 查询优化原则
+
+1. **避免 N+1 查询**
+   - 使用批量查询替代循环查询
+   - 使用 JOIN 预加载关联数据
+   - 参考 `app/services/match_service.py` 中的优化方法
+
+2. **使用合并接口**
+   - 大屏页面使用 `/api/match/dashboard-all` 一次性获取所有数据
+   - 减少网络请求次数
+
+3. **分页查询**
+   - 列表接口必须支持分页
+   - 默认每页 20 条记录
 
 ---
 
@@ -376,6 +464,10 @@ Authorization: Bearer <token>
    - 所有 Select、TreeSelect 等下拉组件使用玻璃态样式
    - 样式定义在 `antd-overrides.css` 中
 
+3. **大屏开发**
+   - 大屏页面使用合并接口 `/api/match/dashboard-all`
+   - 下钻详情页使用独立的特定接口
+
 ### 后端开发规范
 
 1. **数据库表注释**
@@ -386,3 +478,8 @@ Authorization: Bearer <token>
    - 能力维度和标签使用常量文件定义（后端：`app/utils/ability_constants.py`，前端：`src/utils/abilityConstants.ts`）
    - 特质类型和值使用常量文件定义（后端：`app/utils/trait_constants.py`，前端：`src/utils/traitConstants.ts`）
    - 不再使用数据库字典表（ability_tag_dict 和 trait_dict 已删除）
+
+3. **性能优化**
+   - 新增统计接口必须避免 N+1 查询
+   - 使用批量查询和 JOIN 优化性能
+   - 为常用查询字段添加索引

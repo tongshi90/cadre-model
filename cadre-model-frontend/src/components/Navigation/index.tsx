@@ -5,12 +5,10 @@ import {
   TeamOutlined,
   UserOutlined,
   BarChartOutlined,
-  ApartmentOutlined,
   LogoutOutlined,
   KeyOutlined,
   MenuOutlined,
   CloseOutlined,
-  DotChartOutlined,
 } from '@ant-design/icons';
 import { Dropdown, Modal, Form, Input, message } from 'antd';
 import { useAppSelector } from '@/store/hooks';
@@ -29,6 +27,7 @@ const Navigation = () => {
 
   const navItems = [
     { key: '/home', icon: <HomeOutlined />, label: '首页' },
+    // { key: '/department', icon: <ApartmentOutlined />, label: '部门管理' },
     { key: '/cadre', icon: <UserOutlined />, label: '干部管理' },
     { key: '/position', icon: <TeamOutlined />, label: '岗位管理' },
     { key: '/match', icon: <BarChartOutlined />, label: '匹配分析' },

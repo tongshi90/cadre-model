@@ -67,11 +67,13 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        state.token = action.payload.token;
-        state.user = action.payload.user;
-        state.isAuthenticated = true;
-        localStorage.setItem('token', action.payload.token);
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        if (action.payload) {
+          state.token = action.payload.token;
+          state.user = action.payload.user;
+          state.isAuthenticated = true;
+          localStorage.setItem('token', action.payload.token);
+          localStorage.setItem('user', JSON.stringify(action.payload.user));
+        }
       })
       .addCase(login.rejected, (state) => {
         state.loading = false;
@@ -79,8 +81,10 @@ const authSlice = createSlice({
       })
       // 获取当前用户
       .addCase(getCurrentUser.fulfilled, (state, action) => {
-        state.user = action.payload;
-        localStorage.setItem('user', JSON.stringify(action.payload));
+        if (action.payload) {
+          state.user = action.payload;
+          localStorage.setItem('user', JSON.stringify(action.payload));
+        }
       });
   },
 });

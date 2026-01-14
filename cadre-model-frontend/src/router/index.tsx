@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Login from '@/pages/Login';
 import Home from '@/pages/Home';
 import Prototype from '@/pages/Prototype';
-import DashboardScreen from '@/pages/DashboardScreen';
 import DashboardFullScreen from '@/pages/DashboardFullScreen';
 import DashboardDetail from '@/pages/DashboardDetail';
 import CadreGrid from '@/pages/Cadre/Grid';

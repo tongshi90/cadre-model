@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ApartmentOutlined,
@@ -11,130 +11,11 @@ import {
   SafetyOutlined,
   CheckCircleOutlined,
   StarOutlined,
-  ZhiBoltOutlined,
-  BulbOutlined,
-  FireOutlined,
   CrownOutlined
 } from '@ant-design/icons';
 import Hero from '@/components/ui/Hero';
 import ScrollReveal from '@/components/ui/ScrollReveal';
-import CardGrid from '@/components/ui/CardGrid';
-import FeatureCard from '@/components/ui/FeatureCard';
 import './Home.css';
-
-// 粒子效果组件
-const ParticleBackground = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    let particles: Array<{
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      radius: number;
-      alpha: number;
-    }> = [];
-
-    const resizeCanvas = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-
-    const createParticles = () => {
-      particles = [];
-      const particleCount = Math.floor((canvas.width * canvas.height) / 15000);
-      for (let i = 0; i < particleCount; i++) {
-        particles.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          radius: Math.random() * 2 + 1,
-          alpha: Math.random() * 0.5 + 0.2
-        });
-      }
-    };
-
-    const drawParticles = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      particles.forEach((particle, i) => {
-        // 更新位置
-        particle.x += particle.vx;
-        particle.y += particle.vy;
-
-        // 边界检测
-        if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-        if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
-
-        // 绘制粒子
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(212, 175, 55, ${particle.alpha})`;
-        ctx.fill();
-
-        // 连接附近的粒子
-        particles.forEach((otherParticle, j) => {
-          if (i !== j) {
-            const dx = particle.x - otherParticle.x;
-            const dy = particle.y - otherParticle.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-
-            if (distance < 120) {
-              ctx.beginPath();
-              ctx.strokeStyle = `rgba(212, 175, 55, ${0.15 * (1 - distance / 120)})`;
-              ctx.lineWidth = 0.5;
-              ctx.moveTo(particle.x, particle.y);
-              ctx.lineTo(otherParticle.x, otherParticle.y);
-              ctx.stroke();
-            }
-          }
-        });
-      });
-
-      animationFrameId = requestAnimationFrame(drawParticles);
-    };
-
-    resizeCanvas();
-    createParticles();
-    drawParticles();
-
-    const handleResize = () => {
-      resizeCanvas();
-      createParticles();
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      className="particle-canvas"
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        pointerEvents: 'none'
-      }}
-    />
-  );
-};
 
 // 鼠标跟随光晕效果
 const MouseGlow = () => {
@@ -237,9 +118,7 @@ const Home = () => {
             },
           },
         ]}
-      >
-        <ParticleBackground />
-      </Hero>
+      />
 
       {/* 平台介绍 */}
       <section className="intro-section">

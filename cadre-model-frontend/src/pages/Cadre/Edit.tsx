@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Button, Card, message, TreeSelect, Space, InputNumber, Checkbox } from 'antd';
+import { Form, Input, Select, DatePicker, Button, Card, message, TreeSelect, Space, Checkbox } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cadreApi } from '@/services/api';
 import { departmentApi } from '@/services/departmentApi';
@@ -24,14 +24,16 @@ const CadreEdit = () => {
       try {
         const response = await cadreApi.getDetail(Number(id));
         const cadre = response.data.data;
-        setData(cadre);
-        // 处理日期字段，转换为dayjs对象供DatePicker使用
-        const formData = {
-          ...cadre,
-          birth_date: cadre.birth_date ? dayjs(cadre.birth_date) : undefined,
-          entry_date: cadre.entry_date ? dayjs(cadre.entry_date) : undefined,
-        };
-        form.setFieldsValue(formData);
+        if (cadre) {
+          setData(cadre);
+          // 处理日期字段，转换为dayjs对象供DatePicker使用
+          const formData = {
+            ...cadre,
+            birth_date: cadre.birth_date ? dayjs(cadre.birth_date) : undefined,
+            entry_date: cadre.entry_date ? dayjs(cadre.entry_date) : undefined,
+          };
+          form.setFieldsValue(formData);
+        }
       } catch (error) {
         console.error('Failed to fetch cadre:', error);
       }
@@ -160,7 +162,7 @@ const CadreEdit = () => {
               </Form.Item>
 
               <Form.Item label="岗级" name="job_grade">
-                <InputNumber placeholder="请输入岗级" style={{ width: '100%' }} autoComplete="off" controls={false} />
+                <Input placeholder="请输入岗级" autoComplete="off" />
               </Form.Item>
 
               <Form.Item label="管理层级" name="management_level">
@@ -203,8 +205,8 @@ const CadreEdit = () => {
                 <Input placeholder="请输入工作省份" autoComplete="off" />
               </Form.Item>
 
-              <Form.Item label="学生兵级届" name="student_soldier_class">
-                <InputNumber placeholder="请输入学生兵级届" style={{ width: '100%' }} autoComplete="off" controls={false} />
+              <Form.Item label="学生兵级届" name="student_soldier_class" className="student-soldier-class-item">
+                <Input placeholder="请输入学生兵级届" autoComplete="off" />
               </Form.Item>
 
               <Form.Item label="是否外派" name="is_dispatched" valuePropName="checked">
