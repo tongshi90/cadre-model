@@ -60,6 +60,10 @@ apiClient.interceptors.response.use(
           message.error(data?.message || '没有权限访问');
           break;
         case 404:
+          // AI分析接口的404错误不显示消息，由组件自己处理
+          if (config?.url?.includes('/ai-analysis/')) {
+            return Promise.reject(error);
+          }
           message.error(data?.message || '请求的资源不存在');
           break;
         case 500:

@@ -18,6 +18,7 @@ import {
   ProfileOutlined,
   LoadingOutlined,
 } from '@ant-design/icons';
+import apiClient from '@/utils/request';
 import { cadreApi, matchApi, aiAnalysisApi } from '@/services/api';
 import { positionApi } from '@/services/positionApi';
 import type { CadreBasicInfo, CadreDynamicInfo } from '@/types';
@@ -303,18 +304,9 @@ ${JSON.stringify(cadreData, null, 2)}
   const fetchAIAnalysisResult = async () => {
     if (!id) return;
     try {
-      // 直接使用 fetch 避免 axios 拦截器显示错误
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api'}/ai-analysis/${id}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.code === 200 && result.data) {
-          setAiResult(result.data.analysis_result);
-        }
+      const response = await apiClient.get(`/ai-analysis/${id}`);
+      if (response.data.code === 200 && response.data.data) {
+        setAiResult(response.data.data.analysis_result);
       }
       // 404 或其他错误时不做任何处理，不显示错误提示
     } catch (error) {
@@ -391,13 +383,8 @@ ${JSON.stringify(cadreData, null, 2)}
   const fetchCareerData = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const result = await response.json();
-      setCareerData(result.data || []);
+      const response = await apiClient.get(`/cadres/${id}/dynamic-info`);
+      setCareerData(response.data.data || []);
 
       // 重置tab滚动位置到最左边
       setTimeout(() => {
@@ -460,12 +447,7 @@ ${JSON.stringify(cadreData, null, 2)}
 
   const handleCareerDelete = async (recordId: number) => {
     try {
-      await fetch(`http://localhost:5000/api/cadres/dynamic-info/${recordId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+      await apiClient.delete(`/cadres/dynamic-info/${recordId}`);
       message.success('删除成功');
       fetchCareerData();
     } catch (error) {
@@ -535,23 +517,9 @@ ${JSON.stringify(cadreData, null, 2)}
       submitData.remark = values.remark;
 
       if (editingCareer) {
-        await fetch(`http://localhost:5000/api/cadres/dynamic-info/${editingCareer.id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify(submitData),
-        });
+        await apiClient.put(`/cadres/dynamic-info/${editingCareer.id}`, submitData);
       } else {
-        await fetch(`http://localhost:5000/api/cadres/${id}/dynamic-info`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          },
-          body: JSON.stringify(submitData),
-        });
+        await apiClient.post(`/cadres/${id}/dynamic-info`, submitData);
       }
       message.success(editingCareer ? '更新成功' : '创建成功');
       setCareerModalVisible(false);
@@ -566,13 +534,8 @@ ${JSON.stringify(cadreData, null, 2)}
   const fetchAbilityData = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/cadres/${id}/abilities`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const result = await response.json();
-      const abilities = result.data || [];
+      const response = await apiClient.get(`/cadres/${id}/abilities`);
+      const abilities = response.data.data || [];
       setAbilityData(abilities);
     } catch (error) {
       console.error('Failed to fetch ability data:', error);
@@ -629,14 +592,7 @@ ${JSON.stringify(cadreData, null, 2)}
         }
       });
 
-      await fetch(`http://localhost:5000/api/cadres/${id}/abilities`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ abilities }),
-      });
+      await apiClient.put(`/cadres/${id}/abilities`, { abilities });
       message.success('保存成功');
       setAbilityModalVisible(false);
       fetchAbilityData();
@@ -731,13 +687,8 @@ ${JSON.stringify(cadreData, null, 2)}
   const fetchTraitData = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/cadres/${id}/traits`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const result = await response.json();
-      const traits = result.data || [];
+      const response = await apiClient.get(`/cadres/${id}/traits`);
+      const traits = response.data.data || [];
 
       const formData: any = {};
       traits.forEach((item: any) => {
@@ -783,14 +734,7 @@ ${JSON.stringify(cadreData, null, 2)}
         }
       });
 
-      await fetch(`http://localhost:5000/api/cadres/${id}/traits`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ traits }),
-      });
+      await apiClient.put(`/cadres/${id}/traits`, { traits });
       message.success('保存成功');
       setTraitModalVisible(false);
       fetchTraitData();

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Modal, Form, Input, InputNumber, Select, message, Tabs, Table } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, TrophyOutlined, SettingOutlined, BulbOutlined, LoadingOutlined } from '@ant-design/icons';
+import apiClient from '@/utils/request';
 import { positionApi } from '@/services/positionApi';
 import type { PositionInfo } from '@/types';
 import { ABILITY_DIMENSION_LIST } from '@/utils/abilityConstants';
@@ -51,13 +52,8 @@ const PositionDetail = () => {
   const fetchWeightData = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/positions/${id}/weights`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const result = await response.json();
-      const weights = result.data || [];
+      const response = await apiClient.get(`/positions/${id}/weights`);
+      const weights = response.data.data || [];
 
       // 回填表单数据
       const formData: any = {};
@@ -115,14 +111,7 @@ const PositionDetail = () => {
         });
       });
 
-      await fetch(`http://localhost:5000/api/positions/${id}/weights`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ weights }),
-      });
+      await apiClient.put(`/positions/${id}/weights`, { weights });
       message.success('保存成功');
       setWeightModalVisible(false);
       fetchWeightData();
@@ -138,16 +127,11 @@ const PositionDetail = () => {
   const fetchRequirementData = async () => {
     if (!id) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/positions/${id}/requirements`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-      const result = await response.json();
+      const response = await apiClient.get(`/positions/${id}/requirements`);
 
       // 后端返回格式：{ mandatory: [...], suggested: [...] }
-      const mandatory = result.data?.mandatory || [];
-      const suggested = result.data?.suggested || [];
+      const mandatory = response.data.data?.mandatory || [];
+      const suggested = response.data.data?.suggested || [];
 
       // 转换为前端格式
       const requirements = [...mandatory, ...suggested];
@@ -205,14 +189,7 @@ const PositionDetail = () => {
         return;
       }
 
-      await fetch(`http://localhost:5000/api/positions/${id}/requirements`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-        },
-        body: JSON.stringify({ requirements }),
-      });
+      await apiClient.put(`/positions/${id}/requirements`, { requirements });
       message.success('保存成功');
       setRequirementModalVisible(false);
       fetchRequirementData();

@@ -26,7 +26,7 @@ const AIChat: React.FC<AIChatProps> = ({ iframeUrl = 'http://localhost:5173/home
         <div
           className={`ai-chat-float-button ${isOpen ? 'ai-chat-open' : ''}`}
           onClick={toggleChat}
-          title="AI语音助手"
+          title="AI交互"
         >
           {isOpen ? (
             <CloseOutlined className="ai-chat-icon" />
