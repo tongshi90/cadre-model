@@ -158,20 +158,44 @@ const CadreDetailNew = () => {
         suggested_requirements_met: matchResult.suggested_requirements_met,
         failed_suggestions: matchResult.failed_suggestions,
       } : null,
-      // 能力评估
-      abilityScores: abilityData.length > 0 ? abilityData.map(item => ({
-        dimension: item.dimension,
-        dimension_name: item.dimension,
-        score: item.score,
-        tags: item.tags ? item.tags.split(',').map((tag: string) => tag.trim()) : [],
-      })) : null,
-      // 特质分析
-      traits: traitData.length > 0 ? traitData.map(item => ({
-        trait_type: item.trait_type,
-        trait_type_name: TRAIT_TYPE_LIST.find(t => t.value === item.trait_type)?.label || item.trait_type,
-        trait_value: item.trait_value,
-        trait_desc: item.trait_desc,
-      })) : null,
+      // 能力评估 - 按维度计算平均分
+      abilityScores: abilityData.length > 0 ? (() => {
+        const dimensionScores: any = {};
+        abilityData.forEach((item: any) => {
+          const dim = item.ability_dimension;
+          if (!dimensionScores[dim]) {
+            dimensionScores[dim] = { total: 0, count: 0 };
+          }
+          dimensionScores[dim].total += item.score;
+          dimensionScores[dim].count += 1;
+        });
+        return Object.entries(dimensionScores).map(([dimension, data]: [string, any]) => ({
+          dimension,
+          dimension_name: dimension,
+          average_score: Number((data.total / data.count).toFixed(1)),
+        }));
+      })() : null,
+      // 能力分类信息 - 供AI直接使用
+      abilityInfo: abilityData.length > 0 ? (() => {
+        const dimensionScores: any = {};
+        abilityData.forEach((item: any) => {
+          const dim = item.ability_dimension;
+          if (!dimensionScores[dim]) {
+            dimensionScores[dim] = { total: 0, count: 0 };
+          }
+          dimensionScores[dim].total += item.score;
+          dimensionScores[dim].count += 1;
+        });
+        const scores = Object.entries(dimensionScores).map(([dimension, data]: [string, any]) => ({
+          dimension,
+          average_score: Number((data.total / data.count).toFixed(1)),
+        }));
+        return {
+          core_strengths: scores.filter(s => s.average_score >= 4).map(s => `${s.dimension}(${s.average_score}分)`),
+          potential_abilities: scores.filter(s => s.average_score >= 3 && s.average_score < 4).map(s => `${s.dimension}(${s.average_score}分)`),
+          weaknesses: scores.filter(s => s.average_score < 3).map(s => `${s.dimension}(${s.average_score}分)`),
+        };
+      })() : null,
       // 干部履历
       career: careerData.length > 0 ? careerData.map(item => ({
         info_type: item.info_type,
@@ -187,6 +211,11 @@ const CadreDetailNew = () => {
       })) : null,
     };
 
+    // 打印AI分析的完整数据
+    console.log('=== AI分析 - 干部完整数据 ===');
+    console.log(JSON.stringify(cadreData, null, 2));
+    console.log('=============================');
+
     // 构建AI提示词 - 面向干部个人的分析报告
     const prompt = `你是一位资深的职业发展导师和人才成长顾问。请基于以下干部的完整数据，生成一份面向干部个人发展的分析报告。
 
@@ -198,13 +227,12 @@ ${JSON.stringify(cadreData, null, 2)}
 
 📋 一、个人综合画像
 - 基本特征：（姓名、性别、年龄、学历、司龄、政治面貌等）
-- 性格特质：（基于特质分析，描述性格特点、管理风格、沟通风格）
 - 职业标签：（3-5个关键词概括个人特点）
 
 💪 二、能力深度解析
-✓ 核心优势：（3-5项最强能力，结合具体数据说明）
-⚠ 待提升项：（2-3项短板，分析对职业发展的影响）
-🎯 能力均衡度：（各维度能力均衡性分析及建议）
+✓ 核心优势：直接使用abilityInfo.core_strengths中的数据，没有的话不显示这一行
+✓ 潜力能力：直接使用abilityInfo.potential_abilities中的数据，没有的话不显示这一行
+⚠ 薄弱环节：直接使用abilityInfo.weaknesses中的数据，没有的话不显示这一行
 
 📈 三、成长轨迹回顾
 - 职业历程：（工作经历和岗位变更梳理）
@@ -217,26 +245,30 @@ ${JSON.stringify(cadreData, null, 2)}
 - 发挥空间：（当前岗位是否充分发挥个人优势）
 - 潜在挑战：（能力与岗位要求的差距及应对）
 
-🚀 五、个人发展路径
-- 推荐方向：（2-3个适合个人特质的发展方向）
-- 发展路径：（每个方向的具体成长路径）
-- 关键能力：（每个方向需要重点培养的能力）
-
-📌 六、自我提升行动指南
+📌 五、自我提升行动指南
 - 短期突破（6个月内）：
-  ✓ 目标1：（具体行动建议）
-  ✓ 目标2：（具体行动建议）
+  ✓ 针对薄弱环节：使用abilityInfo.weaknesses中的数据，逐个给出具体提升行动
+  ✓ 针对潜力能力：使用abilityInfo.potential_abilities中的数据，给出巩固提升行动
 - 中期成长（1-2年）：
-  ✓ 重点1：（能力提升计划）
-  ✓ 重点2：（发展机会把握）
+  ✓ 补短板计划：针对abilityInfo.weaknesses中的薄弱维度，制定系统性提升计划
+  ✓ 强项深化：针对abilityInfo.core_strengths中的优势维度，规划如何进一步强化
 - 长期规划（3年+）：
   ✓ 职业定位：（长期发展方向）
   ✓ 持续学习：（需要持续投入的能力领域）
 
-💡 七、个性化建议
-- 学习建议：（基于个人特点的培训和学习方向）
-- 实践建议：（如何在工作中锻炼和提升）
-- 资源利用：（如何利用现有平台和机会）
+💡 六、个性化建议
+- 针对性学习建议：针对abilityInfo.weaknesses中的薄弱维度，推荐具体的学习内容、课程、书籍
+- 实践锻炼建议：针对abilityInfo.weaknesses中的薄弱维度，给出如何在工作中具体锻炼的方法
+- 资源利用建议：如何利用现有平台和机会提升薄弱能力
+- 发展优先级：按abilityInfo.weaknesses中的薄弱维度排序，明确优先提升的能力
+
+【特别强调】
+1. abilityInfo字段已预先分类，直接使用即可：
+   - core_strengths：核心优势（得分≥4），格式如["政治素养(4.3分)"]
+   - potential_abilities：潜力能力（3≤得分<4），格式如["职业素养(3.8分)"]
+   - weaknesses：薄弱环节（得分<3），格式如["专业能力(2.5分)"]
+2. 在"能力深度解析"中直接输出abilityInfo三个数组中的内容
+3. 在"自我提升行动指南"和"个性化建议"中，必须针对abilityInfo.weaknesses中的薄弱维度给出建议
 
 【内容要求】
 - 这是一份给干部个人看的报告，请站在个人发展角度给出建议
@@ -248,6 +280,7 @@ ${JSON.stringify(cadreData, null, 2)}
 - 直接给出确定性结论，不要说"信息不足"、"需要进一步分析"等
 - 不要出现"如果..."、"假设..."等假设性表述
 - 重点关注"我该怎么做"而非"组织该做什么"
+- 严禁在输出中出现字段名（如average_score、dimension、ability_dimension等），用中文表述替代（如"平均分"、"维度"）
 
 请严格按照上述格式开始分析：`;
 
