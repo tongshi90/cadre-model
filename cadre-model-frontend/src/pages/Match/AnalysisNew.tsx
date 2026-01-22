@@ -154,7 +154,7 @@ const MatchAnalysis = () => {
         setResults(matchData);
         // 保存结果到 sessionStorage
         sessionStorage.setItem(CURRENT_RESULTS_KEY, JSON.stringify(matchData));
-        message.success(`成功分析 ${matchData.length} 名干部`);
+        message.success(`成功分析 ${matchData.length} 名人才`);
 
         // 停止轮询
         if (pollingTimerRef.current) {
@@ -229,7 +229,7 @@ const MatchAnalysis = () => {
 
     // 检查是否选择了部门或干部
     if (!selectedDepartment && (!selectedCadres || selectedCadres.length === 0)) {
-      message.error('请选择部门或干部');
+      message.error('请选择部门或人才');
       return;
     }
 
@@ -287,7 +287,7 @@ const MatchAnalysis = () => {
       }
 
       if (cadreIdsToAnalyze.length === 0) {
-        message.warning('没有找到在职干部');
+        message.warning('没有找到在职人才');
         setLoading(false);
         return;
       }
@@ -298,7 +298,7 @@ const MatchAnalysis = () => {
 
       setResults(matchData);
 
-      message.success(`成功匹配 ${matchData.length} 名干部`);
+      message.success(`成功匹配 ${matchData.length} 名人才`);
     } catch (error) {
       console.error('Failed to analyze match:', error);
       message.error('匹配分析失败');
@@ -574,7 +574,7 @@ const MatchAnalysis = () => {
         {analyzing && (
           <div className="analysis-progress glass-card">
             <div className="progress-content">
-              <h3 className="progress-title">正在分析干部岗位匹配度，请稍后...</h3>
+              <h3 className="progress-title">正在分析人才岗位匹配度，请稍后...</h3>
               <Progress
                 percent={progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}
                 status="active"
@@ -587,7 +587,7 @@ const MatchAnalysis = () => {
               />
               <div className="progress-info">
                 <span className="progress-text">
-                  已生成 <strong>{progress.current}</strong> / <strong>{progress.total}</strong> 名干部
+                  已生成 <strong>{progress.current}</strong> / <strong>{progress.total}</strong> 名人才
                 </span>
               </div>
             </div>
@@ -601,9 +601,9 @@ const MatchAnalysis = () => {
               <div className="empty-state-icon">
                 <TeamOutlined />
               </div>
-              <h2 className="empty-state-title">干部岗位匹配度分析</h2>
+              <h2 className="empty-state-title">人才岗位匹配度分析</h2>
               <p className="empty-state-description">
-                分析所有在职干部与其当前所在岗位的匹配度，帮助您了解干部与岗位的契合程度
+                分析所有在职人才与其当前所在岗位的匹配度，帮助您了解人才与岗位的契合程度
               </p>
               <div className="empty-state-tips">
                 <p>分析将包含：</p>
@@ -651,7 +651,7 @@ const MatchAnalysis = () => {
           <Form.Item
             label="选择部门"
             name="department_id"
-            tooltip="选择部门则批量分析该部门下所有干部"
+            tooltip="选择部门则批量分析该部门下所有人才"
           >
             <TreeSelect
               placeholder="选择部门"
@@ -664,13 +664,13 @@ const MatchAnalysis = () => {
           </Form.Item>
 
           <Form.Item
-            label="选择干部"
+            label="选择人才"
             name="cadre_ids"
-            tooltip="支持多选，如果同时选择部门和干部，以干部选择为准"
+            tooltip="支持多选，如果同时选择部门和人才，以人才选择为准"
           >
             <Select
               mode="multiple"
-              placeholder="选择干部（可多选）"
+              placeholder="选择人才（可多选）"
               showSearch
               allowClear
               optionFilterProp="label"
@@ -700,7 +700,7 @@ const MatchAnalysis = () => {
   const tabItems = [
     {
       key: 'current',
-      label: '干部当前岗位匹配',
+      label: '人才当前岗位匹配',
       children: <CurrentPositionTab />,
     },
     {
@@ -745,7 +745,7 @@ const MatchAnalysis = () => {
           <div className="analysis-summary glass-card">
             <div className="summary-header">
               <span className="summary-title">
-                {activeTab === 'current' ? '干部当前岗位' : (
+                {activeTab === 'current' ? '人才当前岗位' : (
                   <span className="summary-position">{selectedPosition?.position_name}</span>
                 )}
                 匹配结果
@@ -808,7 +808,7 @@ const MatchAnalysis = () => {
         {!analyzing && results.length === 0 && activeTab === 'custom' && (
           <div className="analysis-empty glass-card">
             <TeamOutlined className="empty-icon" />
-            <p className="empty-text">选择岗位和部门/干部后开始分析</p>
+            <p className="empty-text">选择岗位和部门/人才后开始分析</p>
           </div>
         )}
       </div>

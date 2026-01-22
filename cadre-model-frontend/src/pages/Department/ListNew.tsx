@@ -340,7 +340,7 @@ const DepartmentListNew = () => {
               </p>
             )}
             <p className="delete-hint">
-              注意：如果该部门或其子部门下已有干部，则无法删除
+              注意：如果该部门或其子部门下已有人才，则无法删除
             </p>
           </div>
         )}

@@ -141,7 +141,7 @@ const CadreList = () => {
           </Button>
           <Popconfirm
             title="确认删除"
-            description="确定要删除该干部信息吗？"
+            description="确定要删除该人才信息吗？"
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
@@ -211,7 +211,7 @@ const CadreList = () => {
               onClick={() => navigate('/cadre/create')}
               className="add-button"
             >
-              新增干部
+              新增人才
             </Button>
           </div>
         </div>

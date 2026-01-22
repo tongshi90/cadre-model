@@ -19,8 +19,8 @@ export const MANAGEMENT_LEVEL_LIST = Object.keys(MANAGEMENT_LEVEL).map(key => ({
 
 // 管理归属
 export const MANAGEMENT_ATTRIBUTION: Record<string, string> = {
-  '集团直管干部': '由集团直接管理的干部',
-  '体系直管干部': '由各体系直接管理的干部',
+  '集团直管人才': '由集团直接管理的人才',
+  '体系直管人才': '由各体系直接管理的人才',
 };
 
 export const MANAGEMENT_ATTRIBUTION_LIST = Object.keys(MANAGEMENT_ATTRIBUTION).map(key => ({

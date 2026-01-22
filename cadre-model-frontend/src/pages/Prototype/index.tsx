@@ -165,7 +165,7 @@ const Prototype = () => {
             transition={{ delay: 0.4 }}
           >
             数据驱动的
-            <span className="gradient-text">干部管理</span>
+            <span className="gradient-text">人才管理</span>
           </motion.h1>
 
           <motion.p
@@ -174,7 +174,7 @@ const Prototype = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            运用先进的数据分析算法，实现干部与岗位的智能匹配，
+            运用先进的数据分析算法，实现人才与岗位的智能匹配，
             <br />为组织决策提供科学依据，提升管理效率。
           </motion.p>
 
@@ -228,7 +228,7 @@ const Prototype = () => {
           <div className="stats-grid">
             <StatCard
               icon={<UserOutlined />}
-              label="在职干部"
+              label="在职人才"
               value={156}
               color="#4ade80"
               delay={0}
@@ -294,7 +294,7 @@ const Prototype = () => {
         <div className="container">
           <ScrollReveal>
             <h2 className="section-title">精英团队</h2>
-            <p className="section-subtitle">优秀干部，助力组织发展</p>
+            <p className="section-subtitle">优秀人才，助力组织发展</p>
           </ScrollReveal>
 
           <div className="team-grid">
@@ -339,7 +339,7 @@ const Prototype = () => {
             >
               <h2 className="cta-title">准备好开始了吗？</h2>
               <p className="cta-description">
-                立即体验智能干部管理平台，提升组织决策效率
+                立即体验智能人才管理平台，提升组织决策效率
               </p>
               <motion.button
                 className="cta-button"

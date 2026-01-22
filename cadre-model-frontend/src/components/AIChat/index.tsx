@@ -153,10 +153,10 @@ const AIChat: React.FC<AIChatProps> = ({ iframeUrl = 'http://localhost:5173/home
                 <h3>AI智能问答助手</h3>
                 <p>您可以询问关于周报数据的任何问题，例如：</p>
                 <ul>
-                  <li>查询某干部的项目进度</li>
+                  <li>查询某人才的项目进度</li>
                   <li>了解某个项目的工作内容</li>
                   <li>查看项目风险点</li>
-                  <li>统计各干部的工作情况</li>
+                  <li>统计各人才的工作情况</li>
                 </ul>
               </div>
             )}

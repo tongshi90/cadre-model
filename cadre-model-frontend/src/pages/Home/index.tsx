@@ -48,8 +48,8 @@ const Home = () => {
   const modules = [
     {
       icon: <ApartmentOutlined />,
-      title: '干部管理',
-      description: '全面管理干部基本信息、能力评分、特质分析、动态信息等'
+      title: '人才管理',
+      description: '全面管理人才基本信息、能力评分、特质分析、动态信息等'
     },
     {
       icon: <SafetyOutlined />,
@@ -73,7 +73,7 @@ const Home = () => {
     {
       icon: <StarOutlined />,
       title: '精准识别',
-      description: '多维度评估干部能力，精准识别高潜人才，优化人才队伍结构'
+      description: '多维度评估人才能力，精准识别高潜人才，优化人才队伍结构'
     },
     {
       icon: <TrophyOutlined />,
@@ -95,7 +95,7 @@ const Home = () => {
       <Hero
         title="数据驱动的"
         titleHighlight="智能人才管理平台"
-        description="运用先进的数据分析算法，实现干部与岗位的智能匹配，<br />为组织决策提供科学依据，提升管理效率。"
+        description="运用先进的数据分析算法，实现人才与岗位的智能匹配，<br />为组织决策提供科学依据，提升管理效率。"
         badge={{
           icon: <ThunderboltOutlined />,
           text: '智能决策平台',
@@ -131,8 +131,8 @@ const Home = () => {
                   人才管理解决方案
                 </h2>
                 <p className="intro-description">
-                  本平台是一款面向企业干部管理的综合信息系统，通过数据分析与智能算法，
-                  实现干部信息管理、岗位画像管理、干部岗位匹配度分析等核心功能，
+                  本平台是一款面向企业人才管理的综合信息系统，通过数据分析与智能算法，
+                  实现人才信息管理、岗位画像管理、人才岗位匹配度分析等核心功能，
                   为组织人事决策提供科学依据，助力企业建立可持续发展的人才梯队。
                 </p>
                 <div className="intro-features">

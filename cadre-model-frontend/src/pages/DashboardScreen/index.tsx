@@ -129,7 +129,7 @@ const AgePyramidCard = ({ data, onClick, tooltip }: { data: PyramidStatistics; o
         <div className="screen-card-icon"><TeamOutlined /></div>
         <div className="screen-card-title">
           <h4>
-            干部梯队与年龄结构
+            人才梯队与年龄结构
             {tooltip && (
               <Tooltip title={tooltip} placement="top" overlayClassName="custom-tooltip">
                 <QuestionCircleOutlined style={{ marginLeft: '6px', fontSize: '12px', color: '#d4af37', cursor: 'help' }} />
@@ -693,7 +693,7 @@ const DashboardScreen = () => {
           <div className="screen-logo">
             <ApartmentOutlined />
           </div>
-          <h1 className="screen-title">干部管理数据大屏</h1>
+          <h1 className="screen-title">人才管理数据大屏</h1>
         </div>
       </div>
 
@@ -741,7 +741,7 @@ const DashboardScreen = () => {
               data={pyramidStatistics}
               onClick={() => navigate('/dashboard/detail/pyramid')}
               tooltip={[
-                <div key="1">展示各管理层级的干部人数及年龄分布</div>,
+                <div key="1">展示各管理层级的人才人数及年龄分布</div>,
                 <div key="2" style={{marginTop: '8px'}}><strong>管理层级：</strong>战略层、经营层、中层、基层</div>,
                 <div key="3" style={{marginTop: '8px'}}><strong>年龄分段：</strong></div>,
                 <div key="4">• ≤35岁</div>,
@@ -765,7 +765,7 @@ const DashboardScreen = () => {
             <div className="screen-overview-card green">
               <div className="overview-icon"><TeamOutlined /></div>
               <div className="overview-value">{pyramidStatistics.total_count}</div>
-              <div className="overview-label">干部数</div>
+              <div className="overview-label">人才数</div>
             </div>
             <div className="screen-overview-card blue">
               <div className="overview-icon"><SafetyOutlined /></div>
@@ -826,7 +826,7 @@ const DashboardScreen = () => {
                 <div className="screen-card-icon"><TrophyOutlined /></div>
                 <div className="screen-card-title">
                   <h4>
-                    干部质量画像
+                    人才质量画像
                     <Tooltip title={[
                       <div key="1"><strong>划分规则</strong></div>,
                       <div key="2" style={{marginTop: '8px'}}><strong>横轴（匹配度）：</strong></div>,
@@ -836,9 +836,9 @@ const DashboardScreen = () => {
                       <div key="6">• 低绩效：&lt;2次A/S</div>,
                       <div key="7">• 高绩效：≥2次A/S</div>,
                       <div key="8" style={{marginTop: '8px'}}><strong>四个象限：</strong></div>,
-                      <div key="9">• 明星干部：高匹配+高绩效</div>,
-                      <div key="10">• 稳健干部：高匹配+低绩效</div>,
-                      <div key="11">• 潜力干部：低匹配+高绩效</div>,
+                      <div key="9">• 明星人才：高匹配+高绩效</div>,
+                      <div key="10">• 稳健人才：高匹配+低绩效</div>,
+                      <div key="11">• 潜力人才：低匹配+高绩效</div>,
                       <div key="12">• 需调整：低匹配+低绩效</div>,
                     ]} placement="top" overlayClassName="custom-tooltip">
                       <QuestionCircleOutlined style={{ marginLeft: '6px', fontSize: '12px', color: '#d4af37', cursor: 'help' }} />
@@ -855,13 +855,13 @@ const DashboardScreen = () => {
                     {/* 第一象限：高匹配+高绩效（右上）- 明星干部 */}
                     <div className="quadrant-cell star">
                       <div className="quadrant-icon">⭐</div>
-                      <div className="quadrant-type">明星干部</div>
+                      <div className="quadrant-type">明星人才</div>
                       <div className="quadrant-count">{qualityStats.star}</div>
                     </div>
                     {/* 第二象限：低匹配+高绩效（左上）- 稳健干部 */}
                     <div className="quadrant-cell stable">
                       <div className="quadrant-icon">📊</div>
-                      <div className="quadrant-type">稳健干部</div>
+                      <div className="quadrant-type">稳健人才</div>
                       <div className="quadrant-count">{qualityStats.stable}</div>
                     </div>
                     {/* 第三象限：低匹配+低绩效（左下）- 需调整 */}
@@ -873,7 +873,7 @@ const DashboardScreen = () => {
                     {/* 第四象限：高匹配+低绩效（右下）- 潜力干部 */}
                     <div className="quadrant-cell potential">
                       <div className="quadrant-icon">🚀</div>
-                      <div className="quadrant-type">潜力干部</div>
+                      <div className="quadrant-type">潜力人才</div>
                       <div className="quadrant-count">{qualityStats.potential}</div>
                     </div>
                     {/* 原点中心：坐标轴说明 */}
@@ -921,7 +921,7 @@ const DashboardScreen = () => {
                     流动趋势（近5年）
                     <Tooltip title={[
                       <div key="1"><strong>流动定义</strong></div>,
-                      <div key="2" style={{marginTop: '8px'}}>统计近5年内新入职或发生岗位变动的干部人数</div>,
+                      <div key="2" style={{marginTop: '8px'}}>统计近5年内新入职或发生岗位变动的人才人数</div>,
                       <div key="3" style={{marginTop: '8px'}}><strong>来源划分：</strong></div>,
                       <div key="4">• 内部培养：从其他岗位调任</div>,
                       <div key="5">（有职务变更记录）</div>,
@@ -946,14 +946,14 @@ const DashboardScreen = () => {
                 <div className="screen-card-icon"><RocketOutlined /></div>
                 <div className="screen-card-title">
                   <h4>
-                    干部来源分布
+                    人才来源分布
                     <Tooltip title={[
                       <div key="1"><strong>来源划分</strong></div>,
                       <div key="2" style={{marginTop: '8px'}}>内部培养：</div>,
-                      <div key="3">从其他岗位调任的干部</div>,
+                      <div key="3">从其他岗位调任的人才</div>,
                       <div key="4">（有职务变更记录）</div>,
                       <div key="5" style={{marginTop: '8px'}}>外部引进：</div>,
-                      <div key="6">从外部招聘入职的干部</div>,
+                      <div key="6">从外部招聘入职的人才</div>,
                       <div key="7">（无职务变更记录）</div>,
                     ]} placement="top" overlayClassName="custom-tooltip">
                       <QuestionCircleOutlined style={{ marginLeft: '6px', fontSize: '12px', color: '#d4af37', cursor: 'help' }} />

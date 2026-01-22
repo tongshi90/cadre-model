@@ -28,7 +28,7 @@ const Navigation = () => {
   const navItems = [
     { key: '/home', icon: <HomeOutlined />, label: '首页' },
     // { key: '/department', icon: <ApartmentOutlined />, label: '部门管理' },
-    { key: '/cadre', icon: <UserOutlined />, label: '干部管理' },
+    { key: '/cadre', icon: <UserOutlined />, label: '人才管理' },
     { key: '/position', icon: <TeamOutlined />, label: '岗位管理' },
     { key: '/match', icon: <BarChartOutlined />, label: '匹配分析' },
   ];

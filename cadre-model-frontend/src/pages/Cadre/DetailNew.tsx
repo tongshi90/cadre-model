@@ -108,7 +108,7 @@ const CadreDetailNew = () => {
   // 调用硅基流动API进行AI分析
   const handleAIAnalysis = async () => {
     if (!data) {
-      message.warning('干部数据未加载完成，请稍后重试');
+      message.warning('人才数据未加载完成，请稍后重试');
       return;
     }
 
@@ -941,7 +941,7 @@ ${JSON.stringify(cadreData, null, 2)}
                 ) : (
                   <div className="empty-state">
                     <CalendarOutlined />
-                    <p>该干部未分配岗位</p>
+                    <p>该人才未分配岗位</p>
                   </div>
                 )}
               </div>
@@ -1109,7 +1109,7 @@ ${JSON.stringify(cadreData, null, 2)}
     },
     {
       key: 'career',
-      label: '干部履历',
+      label: '人才履历',
       icon: <CalendarOutlined />,
       children: (
         <div className="career-content">
@@ -1139,12 +1139,12 @@ ${JSON.stringify(cadreData, null, 2)}
                   <div className="career-tab-content">
                     <div className="career-actions">
                       <span className="tab-description">
-                        {type.value === 1 && '记录干部参加培训学习的情况'}
-                        {type.value === 2 && '记录干部参与项目工作的经历'}
-                        {type.value === 3 && '记录干部绩效考核的等级和评价'}
-                        {type.value === 4 && '记录干部获得的奖励或处分情况'}
-                        {type.value === 5 && '记录干部岗位任免和变更信息'}
-                        {type.value === 6 && '记录干部过往的工作经历'}
+                        {type.value === 1 && '记录人才参加培训学习的情况'}
+                        {type.value === 2 && '记录人才参与项目工作的经历'}
+                        {type.value === 3 && '记录人才绩效考核的等级和评价'}
+                        {type.value === 4 && '记录人才获得的奖励或处分情况'}
+                        {type.value === 5 && '记录人才岗位任免和变更信息'}
+                        {type.value === 6 && '记录人才过往的工作经历'}
                       </span>
                       <button className="add-btn-sm" onClick={() => handleCareerAdd(type.value)}>
                         <EditOutlined /> 添加{type.label}

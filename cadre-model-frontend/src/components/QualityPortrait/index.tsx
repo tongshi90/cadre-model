@@ -106,7 +106,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
     },
     series: [
       {
-        name: '干部质量',
+        name: '人才质量',
         type: 'scatter',
         data: data.map(item => [item.match_score, item.performance_score, item.core_project_count]),
         itemStyle: (params: any) => {
@@ -156,7 +156,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
     },
     series: [
       {
-        name: '干部质量分布',
+        name: '人才质量分布',
         type: 'pie',
         radius: ['35%', '60%'],
         center: ['50%', '45%'],
@@ -190,7 +190,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
         data: [
           {
             value: starCount,
-            name: '明星干部',
+            name: '明星人才',
             itemStyle: {
               color: {
                 type: 'linear',
@@ -206,7 +206,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
           },
           {
             value: potentialCount,
-            name: '潜力干部',
+            name: '潜力人才',
             itemStyle: {
               color: {
                 type: 'linear',
@@ -222,7 +222,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
           },
           {
             value: stableCount,
-            name: '稳健干部',
+            name: '稳健人才',
             itemStyle: {
               color: {
                 type: 'linear',
@@ -261,11 +261,11 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
   const getQualityTypeInfo = (type: string) => {
     switch (type) {
       case 'star':
-        return { label: '明星干部', color: '#ef4444', desc: '高匹配+高绩效' };
+        return { label: '明星人才', color: '#ef4444', desc: '高匹配+高绩效' };
       case 'potential':
-        return { label: '潜力干部', color: '#22c55e', desc: '可重点培养' };
+        return { label: '潜力人才', color: '#22c55e', desc: '可重点培养' };
       case 'stable':
-        return { label: '稳健干部', color: '#3b82f6', desc: '表现稳定' };
+        return { label: '稳健人才', color: '#3b82f6', desc: '表现稳定' };
       case 'adjust':
         return { label: '需调整', color: '#94a3b8', desc: '需要关注' };
       default:
@@ -281,7 +281,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
           <div className="quality-stat-icon">⭐</div>
           <div className="quality-stat-content">
             <div className="quality-stat-value">{starCount}</div>
-            <div className="quality-stat-label">明星干部</div>
+            <div className="quality-stat-label">明星人才</div>
             <div className="quality-stat-desc">值得重点用</div>
           </div>
         </div>
@@ -289,7 +289,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
           <div className="quality-stat-icon">🚀</div>
           <div className="quality-stat-content">
             <div className="quality-stat-value">{potentialCount}</div>
-            <div className="quality-stat-label">潜力干部</div>
+            <div className="quality-stat-label">潜力人才</div>
             <div className="quality-stat-desc">可重点培养</div>
           </div>
         </div>
@@ -297,7 +297,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
           <div className="quality-stat-icon">📊</div>
           <div className="quality-stat-content">
             <div className="quality-stat-value">{stableCount}</div>
-            <div className="quality-stat-label">稳健干部</div>
+            <div className="quality-stat-label">稳健人才</div>
             <div className="quality-stat-desc">表现稳定</div>
           </div>
         </div>
@@ -314,7 +314,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
       {/* 图表区域 */}
       <div className="quality-charts-grid">
         <div className="quality-chart-card">
-          <h3 className="quality-chart-title">干部质量分布</h3>
+          <h3 className="quality-chart-title">人才质量分布</h3>
           <div className="quality-chart-content">
             <ReactECharts option={pieOption} style={{ height: '260px' }} />
           </div>
@@ -329,7 +329,7 @@ const QualityPortrait: React.FC<QualityPortraitProps> = ({ data }) => {
 
       {/* 干部列表 */}
       <div className="quality-cadres-section">
-        <h3 className="quality-section-title">干部质量详情</h3>
+        <h3 className="quality-section-title">人才质量详情</h3>
         <div className="quality-cadres-table">
           <div className="quality-table-header">
             <div className="quality-table-cell">姓名</div>

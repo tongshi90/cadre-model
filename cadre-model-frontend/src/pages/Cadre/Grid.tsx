@@ -257,7 +257,7 @@ const CadreGrid = () => {
           </button>
           <Popconfirm
             title="确认删除"
-            description="确定要删除该干部信息吗？"
+            description="确定要删除该人才信息吗？"
             onConfirm={(e) => {
               e?.stopPropagation();
               handleDelete(cadre.id);
@@ -336,7 +336,7 @@ const CadreGrid = () => {
               onClick={() => navigate('/cadre/create')}
               className="add-btn"
             >
-              新增干部
+              新增人才
             </Button>
           </div>
 

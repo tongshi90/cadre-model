@@ -20,10 +20,10 @@ type MatchLevel = 'excellent' | 'qualified' | 'unqualified';
 const detailTitles: Record<DetailType, string> = {
   'match-overall': '全员匹配详情',
   'match-key': '关键岗位匹配详情',
-  'pyramid': '干部梯队与年龄结构详情',
+  'pyramid': '人才梯队与年龄结构详情',
   'risk': '岗位风险详情',
-  'quality': '干部质量画像详情',
-  'source': '干部来源分布详情',
+  'quality': '人才质量画像详情',
+  'source': '人才来源分布详情',
   'flow': '流动趋势详情（近5年）',
 };
 
@@ -579,7 +579,7 @@ const DashboardDetail = () => {
         {/* 统计卡片 */}
         <div className="detail-stats-compact">
           <div className="detail-stat-item">
-            <span className="detail-stat-label">干部总数</span>
+            <span className="detail-stat-label">人才总数</span>
             <span className="detail-stat-value">{pyramidStatistics.total_count}</span>
           </div>
           <div className="detail-stat-divider"></div>
@@ -720,11 +720,11 @@ const DashboardDetail = () => {
     const getQualityTypeInfo = (type: string) => {
       switch (type) {
         case 'star':
-          return { label: '明星干部', color: '#ef4444', tag: 'red' };
+          return { label: '明星人才', color: '#ef4444', tag: 'red' };
         case 'potential':
-          return { label: '潜力干部', color: '#22c55e', tag: 'green' };
+          return { label: '潜力人才', color: '#22c55e', tag: 'green' };
         case 'stable':
-          return { label: '稳健干部', color: '#3b82f6', tag: 'blue' };
+          return { label: '稳健人才', color: '#3b82f6', tag: 'blue' };
         case 'adjust':
           return { label: '需调整', color: '#94a3b8', tag: 'default' };
         default:

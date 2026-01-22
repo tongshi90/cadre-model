@@ -25,7 +25,7 @@ const SourceAndFlow: React.FC<SourceAndFlowProps> = ({ data }) => {
     },
     series: [
       {
-        name: '干部来源',
+        name: '人才来源',
         type: 'pie',
         radius: ['45%', '70%'],
         center: ['50%', '45%'],
@@ -332,7 +332,7 @@ const SourceAndFlow: React.FC<SourceAndFlowProps> = ({ data }) => {
           <div className="source-stat-icon">👥</div>
           <div className="source-stat-content">
             <div className="source-stat-value">{data.total_count}</div>
-            <div className="source-stat-label">干部总数</div>
+            <div className="source-stat-label">人才总数</div>
           </div>
         </div>
       </div>

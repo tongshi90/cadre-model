@@ -56,7 +56,7 @@ const MatchReport = () => {
       <Card title="匹配结果概览" loading={loading}>
         <Descriptions column={2} bordered>
           <Descriptions.Item label="岗位">{result.position?.position_name}</Descriptions.Item>
-          <Descriptions.Item label="干部">{result.cadre?.name} ({result.cadre?.employee_no})</Descriptions.Item>
+          <Descriptions.Item label="人才">{result.cadre?.name} ({result.cadre?.employee_no})</Descriptions.Item>
           <Descriptions.Item label="基础得分">{result.base_score?.toFixed(2)}</Descriptions.Item>
           <Descriptions.Item label="扣分分数">{result.deduction_score?.toFixed(2)}</Descriptions.Item>
           <Descriptions.Item label="最终得分">

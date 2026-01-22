@@ -60,8 +60,8 @@ export const MANAGEMENT_LEVEL_OPTIONS = [
 
 // 管理归属选项
 export const MANAGEMENT_ATTRIBUTION_OPTIONS = [
-  { label: '集团直管干部', value: '集团直管干部' },
-  { label: '体系直管干部', value: '体系直管干部' },
+  { label: '集团直管人才', value: '集团直管人才' },
+  { label: '体系直管人才', value: '体系直管人才' },
 ];
 
 // 学历选项
