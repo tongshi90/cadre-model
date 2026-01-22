@@ -94,7 +94,7 @@ const Home = () => {
       {/* Hero Section */}
       <Hero
         title="数据驱动的"
-        titleHighlight="智能干部管理平台"
+        titleHighlight="智能人才管理平台"
         description="运用先进的数据分析算法，实现干部与岗位的智能匹配，<br />为组织决策提供科学依据，提升管理效率。"
         badge={{
           icon: <ThunderboltOutlined />,
@@ -128,7 +128,7 @@ const Home = () => {
               <div className="intro-text">
                 <h2 className="intro-title">
                   <span className="title-accent">智能化</span>
-                  干部管理解决方案
+                  人才管理解决方案
                 </h2>
                 <p className="intro-description">
                   本平台是一款面向企业干部管理的综合信息系统，通过数据分析与智能算法，
@@ -235,9 +235,9 @@ const Home = () => {
           <ScrollReveal>
             <div className="cta-card">
               <div className="cta-glow"></div>
-              <h2 className="cta-title">开始智能干部管理之旅</h2>
+              <h2 className="cta-title">开始智能人才管理之旅</h2>
               <p className="cta-description">
-                立即体验智能干部管理平台，运用数据分析为组织决策提供支持，提升管理效率
+                立即体验智能人才管理平台，运用数据分析为组织决策提供支持，提升管理效率
               </p>
               <div className="cta-actions">
                 <button

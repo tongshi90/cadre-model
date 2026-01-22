@@ -56,7 +56,7 @@ const Login = () => {
               </svg>
             </div>
             <h1 className="login-title animate-fadeInDown">Talkweb</h1>
-            <p className="login-subtitle animate-fadeInUp animation-delay-200">干部全量模型平台</p>
+            <p className="login-subtitle animate-fadeInUp animation-delay-200">人才管理全量模型平台</p>
           </div>
 
           {/* 装饰线 */}

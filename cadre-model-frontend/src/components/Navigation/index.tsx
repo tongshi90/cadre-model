@@ -100,7 +100,7 @@ const Navigation = () => {
             </div>
             <div className="logo-text">
               <span className="logo-title">Talkweb</span>
-              <span className="logo-subtitle">干部全量模型平台</span>
+              <span className="logo-subtitle">人才管理全量模型平台</span>
             </div>
           </div>
 
