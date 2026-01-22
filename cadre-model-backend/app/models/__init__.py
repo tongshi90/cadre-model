@@ -19,6 +19,7 @@ from app.models.system import (
 )
 from app.models.department import Department
 from app.models.ai_analysis import AIAnalysis
+from app.models.weekly_report import WeeklyReport
 
 __all__ = [
     # 干部模型
@@ -40,4 +41,6 @@ __all__ = [
     'Department',
     # AI分析模型
     'AIAnalysis',
+    # 周报模型
+    'WeeklyReport',
 ]

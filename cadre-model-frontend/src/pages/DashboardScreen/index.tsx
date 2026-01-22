@@ -17,6 +17,7 @@ import { departmentApi } from '@/services/departmentApi';
 import { positionApi } from '@/services/positionApi';
 import { Tooltip } from 'antd';
 import type { MatchStatistics, PyramidStatistics, SourceAndFlowStatistics } from '@/types';
+import AIChat from '@/components/AIChat';
 import './index.css';
 
 // 匹配态势卡片组件（大屏版本 - 精简）
@@ -683,6 +684,9 @@ const DashboardScreen = () => {
 
   return (
     <div className="dashboard-screen">
+      {/* AI交互悬浮按钮 - 大屏页面专用 */}
+      <AIChat mode="chat" iframeUrl="http://192.168.18.77:3000/zh/chat" />
+
       {/* 标题栏 */}
       <div className="screen-header">
         <div className="screen-header-left">

@@ -5,5 +5,6 @@ position_bp = Blueprint('position', __name__)
 match_bp = Blueprint('match', __name__)
 system_bp = Blueprint('system', __name__)
 ai_analysis_bp = Blueprint('ai_analysis', __name__)
+weekly_report_bp = Blueprint('weekly_report', __name__)
 
-from app.api import cadre, position, match, system, department, ai_analysis
+from app.api import cadre, position, match, system, department, ai_analysis, weekly_report

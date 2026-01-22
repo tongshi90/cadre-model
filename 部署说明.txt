@@ -1,0 +1,11 @@
+在P40服务器上，将前后端代码拷贝上去（直接使用文件传输功能，把所有文件和文件夹拷贝进去就行）
+
+
+
+前后端部署脚本
+docker build --no-cache -t cadre-backend:v1 .
+docker build --no-cache -t cadre-frontend:v1 .
+
+前后端启动脚本(ip需要替换成实际服务器的IP地址)
+docker run -d -p 5000:5000 --name cadre-backend cadre-backend:v1
+docker run -d -p 5173:80 -e BACKEND_HOST=192.168.18.77 -e BACKEND_PORT=5000 --name cadre-frontend cadre-frontend:v1

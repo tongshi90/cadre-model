@@ -38,7 +38,15 @@ def get_all_positions():
     """获取所有启用的岗位"""
     try:
         positions = PositionService.get_all_positions()
-        return success_response([p.to_dict() for p in positions])
+        # 返回包含权重信息的岗位数据
+        result = []
+        for p in positions:
+            position_dict = p.to_dict()
+            # 添加权重信息
+            weights = PositionService.get_position_weights(p.id)
+            position_dict['ability_weights'] = [w.to_dict() for w in weights]
+            result.append(position_dict)
+        return success_response(result)
     except Exception as e:
         return error_response(str(e), 500)
 

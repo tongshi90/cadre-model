@@ -196,6 +196,82 @@ const CadreDetailNew = () => {
           weaknesses: scores.filter(s => s.average_score < 3).map(s => `${s.dimension}(${s.average_score}分)`),
         };
       })() : null,
+      // 短板攻坚岗位 - 根据能力短板计算推荐岗位
+      hardcorePosition: abilityData.length > 0 && positionList.length > 0 ? (() => {
+        // 计算各维度平均分
+        const dimensionScores: any = {};
+        abilityData.forEach((item: any) => {
+          const dim = item.ability_dimension;
+          if (!dimensionScores[dim]) {
+            dimensionScores[dim] = { total: 0, count: 0 };
+          }
+          dimensionScores[dim].total += item.score;
+          dimensionScores[dim].count += 1;
+        });
+
+        const scores = Object.entries(dimensionScores).map(([dimension, data]: [string, any]) => ({
+          dimension,
+          average_score: Number((data.total / data.count).toFixed(1)),
+        }));
+
+        console.log('=== hardcorePosition 调试 ===');
+        console.log('能力得分:', scores);
+
+        // 找出得分低于3分的维度
+        const weakScores = scores.filter(s => s.average_score < 3);
+        console.log('低于3分的维度:', weakScores);
+
+        if (weakScores.length === 0) {
+          return '各能力维度比较均衡，没有明显的短板。';
+        }
+
+        // 取得分最低的维度
+        const weakest = weakScores.reduce((min, current) =>
+          current.average_score < min.average_score ? current : min
+        );
+        console.log('最薄弱维度:', weakest);
+
+        // 在所有岗位中找到这个维度权重值最高的岗位
+        const positionWeightMap: any[] = [];
+        positionList.forEach((position: any) => {
+          if (position.ability_weights && Array.isArray(position.ability_weights)) {
+            const weightItem = position.ability_weights.find((w: any) => w.ability_dimension === weakest.dimension);
+            if (weightItem) {
+              positionWeightMap.push({
+                position_name: position.position_name,
+                weight: weightItem.weight,
+              });
+            }
+          }
+        });
+
+        console.log('找到的岗位权重映射:', positionWeightMap);
+
+        // 按权重值排序（从高到低）
+        positionWeightMap.sort((a, b) => b.weight - a.weight);
+
+        if (positionWeightMap.length === 0) {
+          // 没有找到任何岗位包含该维度权重，返回默认提示
+          console.log('没有找到任何岗位包含该维度的权重');
+          return `${weakest.dimension}(${weakest.average_score}分)比较薄弱，建议在相关岗位进行锻炼提升能力。`;
+        }
+
+        // 找到最高权重值
+        const maxWeight = positionWeightMap[0].weight;
+        // 获取权重值等于最高权重的岗位（最多3个）
+        const topPositions = positionWeightMap
+          .filter(p => p.weight === maxWeight)
+          .map(p => p.position_name);
+
+        // 随机打乱（如果超过3个的话随机取3个）
+        const shuffled = topPositions.sort(() => Math.random() - 0.5);
+        const selectedPositions = shuffled.slice(0, 3);
+
+        console.log('最终选中的岗位:', selectedPositions);
+        console.log('========================');
+
+        return `${weakest.dimension}(${weakest.average_score}分)比较薄弱，建议在${selectedPositions.join('、')}进行锻炼提升能力。`;
+      })() : '各能力维度比较均衡，没有明显的短板。',
       // 干部履历
       career: careerData.length > 0 ? careerData.map(item => ({
         info_type: item.info_type,
@@ -210,6 +286,15 @@ const CadreDetailNew = () => {
         ...(item.info_type === 6 && { work_company: item.work_company, work_position: item.work_position }),
       })) : null,
     };
+
+    // 打印调试信息 - 岗位列表数据
+    console.log('=== 岗位列表数据 ===');
+    console.log('positionList:', positionList);
+    console.log('positionList length:', positionList.length);
+    if (positionList.length > 0) {
+      console.log('第一个岗位数据:', JSON.stringify(positionList[0], null, 2));
+    }
+    console.log('====================');
 
     // 打印AI分析的完整数据
     console.log('=== AI分析 - 干部完整数据 ===');
@@ -230,9 +315,9 @@ ${JSON.stringify(cadreData, null, 2)}
 - 职业标签：（3-5个关键词概括个人特点）
 
 💪 二、能力深度解析
-✓ 核心优势：直接使用abilityInfo.core_strengths中的数据，没有的话不显示这一行
-✓ 潜力能力：直接使用abilityInfo.potential_abilities中的数据，没有的话不显示这一行
-⚠ 薄弱环节：直接使用abilityInfo.weaknesses中的数据，没有的话不显示这一行
+✓ 核心优势：直接使用abilityInfo.core_strengths数组中的数据，用顿号连接，原样输出，不要修改任何文字；如果数组为空则不显示这一行
+✓ 潜力能力：直接使用abilityInfo.potential_abilities数组中的数据，用顿号连接，原样输出，不要修改任何文字；如果数组为空则不显示这一行
+⚠ 薄弱环节：直接使用abilityInfo.weaknesses数组中的数据，用顿号连接，原样输出，不要修改任何文字；如果数组为空则不显示这一行
 
 📈 三、成长轨迹回顾
 - 职业历程：（工作经历和岗位变更梳理）
@@ -244,6 +329,7 @@ ${JSON.stringify(cadreData, null, 2)}
 - 当前适配度：（与现任岗位的匹配度及评价）
 - 发挥空间：（当前岗位是否充分发挥个人优势）
 - 潜在挑战：（能力与岗位要求的差距及应对）
+- 短板攻坚岗位：${cadreData.hardcorePosition}
 
 📌 五、自我提升行动指南
 - 短期突破（6个月内）：
@@ -264,11 +350,12 @@ ${JSON.stringify(cadreData, null, 2)}
 
 【特别强调】
 1. abilityInfo字段已预先分类，直接使用即可：
-   - core_strengths：核心优势（得分≥4），格式如["政治素养(4.3分)"]
-   - potential_abilities：潜力能力（3≤得分<4），格式如["职业素养(3.8分)"]
+   - core_strengths：核心优势（得分≥4），格式如["政治素养(4.3分)", "职业素养(4.1分)"]
+   - potential_abilities：潜力能力（3≤得分<4），格式如["沟通能力(3.8分)"]
    - weaknesses：薄弱环节（得分<3），格式如["专业能力(2.5分)"]
-2. 在"能力深度解析"中直接输出abilityInfo三个数组中的内容
+2. 在"能力深度解析"中，三个数据项必须原样输出abilityInfo数组中的值，用顿号连接，严禁修改任何文字；如果数组为空则该行不显示
 3. 在"自我提升行动指南"和"个性化建议"中，必须针对abilityInfo.weaknesses中的薄弱维度给出建议
+4. hardcorePosition字段是系统计算好的推荐岗位信息，在"岗位适配洞察"中必须原样输出，不要修改任何文字
 
 【内容要求】
 - 这是一份给干部个人看的报告，请站在个人发展角度给出建议
@@ -292,7 +379,7 @@ ${JSON.stringify(cadreData, null, 2)}
           'Authorization': 'Bearer sk-pjdyzooethndmyauyzjbopafxxqogayzhjopheijtwgkgras',
         },
         body: JSON.stringify({
-          model: 'Qwen/Qwen2.5-7B-Instruct',
+          model: 'Qwen/Qwen2.5-14B-Instruct',
           messages: [
             {
               role: 'user',
@@ -406,7 +493,15 @@ ${JSON.stringify(cadreData, null, 2)}
   const fetchPositionList = async () => {
     try {
       const response = await positionApi.getAll();
-      setPositionList(response.data.data || []);
+      const positions = response.data.data || [];
+      console.log('=== fetchPositionList 获取到的岗位数据 ===');
+      console.log('岗位数量:', positions.length);
+      if (positions.length > 0) {
+        console.log('第一个岗位完整数据:', JSON.stringify(positions[0], null, 2));
+        console.log('第一个岗位的ability_weights:', positions[0].ability_weights);
+      }
+      console.log('==========================================');
+      setPositionList(positions);
     } catch (error) {
       console.error('Failed to fetch position list:', error);
     }

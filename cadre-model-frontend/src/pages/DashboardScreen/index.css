@@ -1120,3 +1120,27 @@
     min-height: 180px;
   }
 }
+
+/* ============================================
+   大屏页面 AI 交互按钮样式
+   ============================================ */
+
+/* AI聊天按钮位置 - 大屏页面右下角 */
+.dashboard-screen .ai-chat-float-button-wrapper {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  z-index: 100;
+}
+
+/* AI聊天弹窗位置 - 与AI分析弹窗一致 */
+.dashboard-screen .ai-chat-modal {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 110px;
+  width: 80vw;
+  height: 80vh;
+  max-width: 1400px;
+  max-height: none;
+}

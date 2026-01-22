@@ -33,12 +33,13 @@ def create_app(config_name='default'):
          expose_headers=['Content-Type', 'Authorization'])
 
     # Register API blueprints
-    from app.api import cadre_bp, position_bp, match_bp, system_bp, ai_analysis_bp
+    from app.api import cadre_bp, position_bp, match_bp, system_bp, ai_analysis_bp, weekly_report_bp
     app.register_blueprint(cadre_bp, url_prefix='/api')
     app.register_blueprint(position_bp, url_prefix='/api')
     app.register_blueprint(match_bp, url_prefix='/api')
     app.register_blueprint(system_bp, url_prefix='/api')
     app.register_blueprint(ai_analysis_bp, url_prefix='/api')
+    app.register_blueprint(weekly_report_bp, url_prefix='/api')
 
     # Register error handlers
     from app.utils.handlers import register_error_handlers

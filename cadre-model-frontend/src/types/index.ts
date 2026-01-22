@@ -130,6 +130,7 @@ export interface PositionInfo {
   responsibility?: string;
   status: number;
   is_key_position?: number;
+  ability_weights?: PositionAbilityWeight[];
   create_time?: string;
   update_time?: string;
   create_by?: string;

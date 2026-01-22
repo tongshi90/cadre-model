@@ -25,8 +25,8 @@ function App() {
         <Outlet />
       </main>
 
-      {/* AI对话悬浮按钮 */}
-      <AIChat iframeUrl="http://192.168.18.77:3000/zh/chat" />
+      {/* AI分析悬浮按钮 - 非大屏页面显示 */}
+      <AIChat mode="analysis" />
     </div>
   );
 }
