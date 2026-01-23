@@ -15,9 +15,17 @@ const Login = () => {
   const onFinish = async (values: { username: string; password: string }) => {
     setLoading(true);
     try {
-      await dispatch(login(values)).unwrap();
+      const result = await dispatch(login(values)).unwrap();
       message.success('登录成功');
-      navigate('/home');
+
+      // 根据用户类型跳转到不同页面
+      if (result.user?.user_type === 'cadre') {
+        // 人才登录，跳转到自己的详情页
+        navigate(`/cadre/${result.user.cadre_id}`);
+      } else {
+        // 管理员登录，跳转到首页
+        navigate('/home');
+      }
     } catch (error: any) {
       console.error('Login failed:', error);
     } finally {

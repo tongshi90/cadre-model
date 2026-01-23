@@ -1,6 +1,7 @@
-from flask import request
+from flask import request, Response, stream_with_context
 from app.api import weekly_report_bp
 from app.utils.helpers import success_response, error_response
+import json
 
 
 @weekly_report_bp.route('/weekly-report/data', methods=['GET'])
@@ -97,7 +98,7 @@ def check_token_limit(messages: list, model_name: str, model_max_tokens: int) ->
 
 @weekly_report_bp.route('/weekly-report/ai-chat', methods=['POST'])
 def ai_chat():
-    """AI对话接口"""
+    """AI对话接口（流式输出）"""
     from app.models.weekly_report import WeeklyReport
     from app import db
 
@@ -112,11 +113,12 @@ def ai_chat():
         # 获取周报数据
         reports = WeeklyReport.query.order_by(WeeklyReport.created_at.desc()).all()
 
-        # 如果没有数据，返回提示
+        # 如果没有数据，返回提示（流式）
         if not reports:
-            return success_response({
-                'reply': '暂无周报数据，请先添加周报数据。'
-            }, '对话成功')
+            def generate_no_data():
+                yield f"data: {json.dumps({'content': '暂无周报数据，请先添加周报数据。'}, ensure_ascii=False)}\n\n"
+                yield "data: [DONE]\n\n"
+            return Response(stream_with_context(generate_no_data()), mimetype='text/event-stream')
 
         # 构建上下文数据时添加元数据信息（提交人、时间）
         context_parts = []
@@ -196,50 +198,62 @@ def ai_chat():
         # Token检查（Qwen2.5-14B-Instruct 最大支持 32768 tokens）
         token_check = check_token_limit(messages, 'Qwen/Qwen2.5-14B-Instruct', 32768)
 
-        # 打印token检查结果到console
-        print("=" * 60)
-        print("📊 Token 检查报告")
-        print("=" * 60)
-        print(f"模型: {token_check['model']}")
-        print(f"模型最大Token: {token_check['model_max_tokens']}")
-        print(f"估算输入Token: {token_check['estimated_input_tokens']}")
-        print(f"使用率: {token_check['usage_rate']}")
-        print(f"可用Token(预留输出): {token_check['available_tokens']}")
-        print(f"是否超限: {'⚠️ 是' if token_check['will_truncate'] else '✅ 否'}")
-        print("-" * 60)
-        print("消息详情:")
-        for i, item in enumerate(token_check['breakdown'], 1):
-            print(f"  [{i}] {item['role']:12} - {item['tokens']:6} tokens (内容长度: {item['content_length']} 字符)")
-        print("=" * 60)
-        print(token_check['message'])
-        print("=" * 60)
+        # 流式生成器函数
+        def generate_stream():
+            import requests
+            try:
+                # 调用硅基流动API（流式）
+                response = requests.post(
+                    'https://api.siliconflow.cn/v1/chat/completions',
+                    headers={
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer sk-pjdyzooethndmyauyzjbopafxxqogayzhjopheijtwgkgras',
+                    },
+                    json={
+                        'model': 'Qwen/Qwen2.5-14B-Instruct',
+                        'messages': messages,
+                        'stream': True,
+                    },
+                    timeout=120,
+                    stream=True
+                )
 
-        # 调用硅基流动API
-        import requests
+                if response.status_code != 200:
+                    error_msg = json.dumps({'content': f'AI服务请求失败: {response.status_code}'}, ensure_ascii=False)
+                    yield f"data: {error_msg}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
 
-        response = requests.post(
-            'https://api.siliconflow.cn/v1/chat/completions',
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer sk-pjdyzooethndmyauyzjbopafxxqogayzhjopheijtwgkgras',
-            },
-            json={
-                'model': 'Qwen/Qwen2.5-14B-Instruct',
-                'messages': messages,
-                'stream': False,
-            },
-            timeout=60
-        )
+                # 处理流式响应
+                for line in response.iter_lines():
+                    if line:
+                        line = line.decode('utf-8')
+                        # SSE格式：data: {...}
+                        if line.startswith('data: '):
+                            data_str = line[6:]  # 去掉 'data: ' 前缀
+                            if data_str.strip() == '[DONE]':
+                                yield "data: [DONE]\n\n"
+                                break
+                            try:
+                                data_json = json.loads(data_str)
+                                # 提取内容
+                                content = data_json.get('choices', [{}])[0].get('delta', {}).get('content', '')
+                                if content:
+                                    # 转发给前端
+                                    yield f"data: {json.dumps({'content': content}, ensure_ascii=False)}\n\n"
+                            except json.JSONDecodeError:
+                                continue
 
-        if response.status_code != 200:
-            return error_response(f'AI服务请求失败: {response.status_code}', 500)
+            except requests.exceptions.Timeout:
+                error_msg = json.dumps({'content': '请求超时，请稍后重试'}, ensure_ascii=False)
+                yield f"data: {error_msg}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as e:
+                error_msg = json.dumps({'content': f'流式输出发生错误: {str(e)}'}, ensure_ascii=False)
+                yield f"data: {error_msg}\n\n"
+                yield "data: [DONE]\n\n"
 
-        result = response.json()
-        ai_reply = result.get('choices', [{}])[0].get('message', {}).get('content', '无法获取AI响应')
-
-        return success_response({
-            'reply': ai_reply
-        }, '对话成功')
+        return Response(stream_with_context(generate_stream()), mimetype='text/event-stream')
 
     except Exception as e:
         return error_response(f'对话失败: {str(e)}', 500)

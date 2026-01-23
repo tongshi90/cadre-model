@@ -100,6 +100,7 @@ class CadreSchema(Schema):
     id = fields.Int(dump_only=True)
     employee_no = fields.Str(required=True, validate=validate.Length(min=1, max=50))
     name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
+    phone = fields.Str(allow_none=True, validate=validate.Length(max=20))
     department_id = fields.Int(allow_none=True)
     position_id = fields.Int(allow_none=True)
     job_grade = fields.Int(allow_none=True)
@@ -135,6 +136,7 @@ class CadreUpdateSchema(Schema):
         unknown = EXCLUDE
 
     name = fields.Str(allow_none=True, validate=validate.Length(min=1, max=100))
+    phone = fields.Str(allow_none=True, validate=validate.Length(max=20))
     department_id = fields.Int(allow_none=True)
     position_id = fields.Int(allow_none=True)
     job_grade = fields.Int(allow_none=True)

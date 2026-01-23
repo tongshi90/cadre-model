@@ -18,6 +18,7 @@ import MatchAnalysisNew from '@/pages/Match/AnalysisNew';
 import MatchResult from '@/pages/Match/Result';
 import MatchReport from '@/pages/Match/Report';
 import App from '@/App';
+import ProtectedRoute from '@/components/ProtectedRoute';
 
 const router = createBrowserRouter([
   {
@@ -34,11 +35,11 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard',
-    element: <DashboardFullScreen />,
+    element: <ProtectedRoute requireAdmin><DashboardFullScreen /></ProtectedRoute>,
   },
   {
     path: '/dashboard/detail/:type',
-    element: <DashboardDetail />,
+    element: <ProtectedRoute requireAdmin><DashboardDetail /></ProtectedRoute>,
   },
   {
     path: '/',
@@ -46,23 +47,23 @@ const router = createBrowserRouter([
     children: [
       {
         path: 'home',
-        element: <Home />,
+        element: <ProtectedRoute requireAdmin><Home /></ProtectedRoute>,
       },
       {
         path: 'department',
-        element: <DepartmentListNew />,
+        element: <ProtectedRoute requireAdmin><DepartmentListNew /></ProtectedRoute>,
       },
       {
         path: 'cadre',
-        element: <CadreGrid />,
+        element: <ProtectedRoute requireAdmin><CadreGrid /></ProtectedRoute>,
       },
       {
         path: 'cadre/table',
-        element: <CadreList />,
+        element: <ProtectedRoute requireAdmin><CadreList /></ProtectedRoute>,
       },
       {
         path: 'cadre/create',
-        element: <CadreCreate />,
+        element: <ProtectedRoute requireAdmin><CadreCreate /></ProtectedRoute>,
       },
       {
         path: 'cadre/:id',
@@ -70,35 +71,35 @@ const router = createBrowserRouter([
       },
       {
         path: 'cadre/:id/edit',
-        element: <CadreEdit />,
+        element: <ProtectedRoute requireAdmin><CadreEdit /></ProtectedRoute>,
       },
       {
         path: 'position',
-        element: <PositionListNew />,
+        element: <ProtectedRoute requireAdmin><PositionListNew /></ProtectedRoute>,
       },
       {
         path: 'position/create',
-        element: <PositionCreate />,
+        element: <ProtectedRoute requireAdmin><PositionCreate /></ProtectedRoute>,
       },
       {
         path: 'position/:id',
-        element: <PositionDetail />,
+        element: <ProtectedRoute requireAdmin><PositionDetail /></ProtectedRoute>,
       },
       {
         path: 'position/:id/edit',
-        element: <PositionEdit />,
+        element: <ProtectedRoute requireAdmin><PositionEdit /></ProtectedRoute>,
       },
       {
         path: 'match',
-        element: <MatchAnalysisNew />,
+        element: <ProtectedRoute requireAdmin><MatchAnalysisNew /></ProtectedRoute>,
       },
       {
         path: 'match/results',
-        element: <MatchResult />,
+        element: <ProtectedRoute requireAdmin><MatchResult /></ProtectedRoute>,
       },
       {
         path: 'match/results/:id',
-        element: <MatchReport />,
+        element: <ProtectedRoute requireAdmin><MatchReport /></ProtectedRoute>,
       },
     ],
   },

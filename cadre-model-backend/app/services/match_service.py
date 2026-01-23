@@ -229,6 +229,39 @@ class MatchService:
         return MatchResult.query.get(result_id)
 
     @staticmethod
+    def check_current_position_has_data() -> bool:
+        """
+        快速检查是否有当前岗位匹配数据（轻量级查询）
+
+        使用 COUNT 快速查询，避免复杂 JOIN 带来的性能问题
+
+        Returns:
+            是否有数据
+        """
+        from sqlalchemy import func
+
+        # 统计有岗位的在职干部数量
+        total_cadres_with_position = db.session.query(func.count(CadreBasicInfo.id)).filter(
+            CadreBasicInfo.status == 1,
+            CadreBasicInfo.position_id.isnot(None)
+        ).scalar()
+
+        if total_cadres_with_position == 0:
+            return False
+
+        # 统计 match_result 表中干部当前岗位匹配结果的数量
+        # 使用子查询来匹配：匹配结果中的岗位ID等于干部的当前岗位ID
+        count = db.session.query(func.count(MatchResult.id)).join(
+            CadreBasicInfo, MatchResult.cadre_id == CadreBasicInfo.id
+        ).filter(
+            CadreBasicInfo.position_id.isnot(None),
+            CadreBasicInfo.status == 1,
+            MatchResult.position_id == CadreBasicInfo.position_id
+        ).scalar()
+
+        return count > 0
+
+    @staticmethod
     def get_current_position_match_results() -> List[Dict]:
         """
         获取干部当前岗位匹配结果（优化查询，只选择必要字段）

@@ -244,3 +244,51 @@ def delete_dynamic_info(info_id):
         return success_response(None, '删除成功')
     except Exception as e:
         return error_response(str(e), 500)
+
+
+@cadre_bp.route('/cadres/<int:id>/change-password', methods=['POST'])
+@token_required
+@log_operation('cadre', 'update')
+def change_cadre_password(id):
+    """修改人才密码"""
+    try:
+        from flask import g
+        data = request.json
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+
+        if not old_password or not new_password:
+            return error_response('请输入原始密码和新密码', 400)
+
+        # 获取人才信息
+        from app.models.cadre import CadreBasicInfo
+        from app import db
+
+        cadre = CadreBasicInfo.query.get(id)
+        if not cadre:
+            return error_response('人才不存在', 404)
+
+        # 验证原始密码
+        if not cadre.password or not cadre.check_password(old_password):
+            return error_response('原始密码错误', 400)
+
+        # 验证新密码长度
+        if len(new_password) < 6 or len(new_password) > 18:
+            return error_response('新密码长度为6-18位', 400)
+
+        # 验证新密码包含字母和数字
+        import re
+        if not re.search(r'[A-Za-z]', new_password) or not re.search(r'\d', new_password):
+            return error_response('新密码需要包含字母和数字', 400)
+
+        # 验证新密码不能与原始密码一致
+        if old_password == new_password:
+            return error_response('新密码不能与原始密码一致', 400)
+
+        # 更新密码
+        cadre.set_password(new_password)
+        db.session.commit()
+
+        return success_response(None, '密码修改成功')
+    except Exception as e:
+        return error_response(str(e), 500)

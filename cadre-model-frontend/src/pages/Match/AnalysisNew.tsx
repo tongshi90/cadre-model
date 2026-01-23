@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Form, Select, Button, Table, Tag, TreeSelect, message, Tabs, Progress } from 'antd';
+import { Form, Select, Button, Table, Tag, TreeSelect, message, Tabs, Progress, Spin } from 'antd';
 import { TeamOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { positionApi } from '@/services/positionApi';
@@ -54,6 +54,7 @@ const MatchAnalysis = () => {
   const [form] = Form.useForm();
   const initialState = getInitialState();
   const [loading, setLoading] = useState(false);
+  const [initializing, setInitializing] = useState(false); // 初始加载状态
   const [positions, setPositions] = useState<PositionInfo[]>([]);
   const [treeData, setTreeData] = useState<TreeNode[]>([]);
   const [cadres, setCadres] = useState<CadreBasicInfo[]>([]);
@@ -201,9 +202,21 @@ const MatchAnalysis = () => {
 
   // 获取已保存的干部当前岗位匹配结果
   const fetchCurrentPositionResults = async () => {
-    setLoading(true);
+    setInitializing(true);
+    setResults([]);
 
     try {
+      // 第一步：快速检查是否有数据（轻量级查询）
+      const checkResponse = await matchApi.checkCurrentPositionHasData();
+      const hasData = checkResponse.data.data?.has_data ?? false;
+
+      if (!hasData) {
+        // 没有数据，直接显示空状态
+        setInitializing(false);
+        return;
+      }
+
+      // 有数据，继续加载完整数据
       const response = await matchApi.getCurrentPositionResults();
       const matchData = response.data.data || [];
 
@@ -212,7 +225,7 @@ const MatchAnalysis = () => {
       console.error('Failed to fetch current position match results:', error);
       message.error('获取匹配结果失败');
     } finally {
-      setLoading(false);
+      setInitializing(false);
     }
   };
 
@@ -570,6 +583,16 @@ const MatchAnalysis = () => {
 
     return (
       <div>
+        {/* 初始化/加载中状态 - 显示全屏加载 */}
+        {initializing && !analyzing && (
+          <div className="analysis-progress glass-card">
+            <div className="progress-content">
+              <Spin size="large" />
+              <h3 className="progress-title" style={{ marginTop: 16 }}>正在加载匹配数据，请稍后...</h3>
+            </div>
+          </div>
+        )}
+
         {/* 分析进度显示 */}
         {analyzing && (
           <div className="analysis-progress glass-card">
@@ -595,7 +618,7 @@ const MatchAnalysis = () => {
         )}
 
         {/* 无数据时显示大按钮 */}
-        {!hasResults && !analyzing && (
+        {!hasResults && !analyzing && !initializing && (
           <div className="analysis-empty-state glass-card">
             <div className="empty-state-content">
               <div className="empty-state-icon">

@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Button, Modal, Form, Input, DatePicker, Select, InputNumber, Popconfirm, message, Tabs } from 'antd';
+import { Button, Modal, Form, Input, DatePicker, Select, InputNumber, Popconfirm, message, Tabs, Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import {
   ArrowLeftOutlined,
   EditOutlined,
@@ -17,6 +18,10 @@ import {
   CalendarOutlined,
   ProfileOutlined,
   LoadingOutlined,
+  EyeOutlined,
+  LockOutlined,
+  LogoutOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import apiClient from '@/utils/request';
 import { cadreApi, matchApi, aiAnalysisApi } from '@/services/api';
@@ -38,6 +43,10 @@ import {
   MONTH_OPTIONS,
 } from '@/utils/dynamicInfoConstants';
 import ReactECharts from 'echarts-for-react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/store';
+import { logout } from '@/store/slices/authSlice';
+import { authApi } from '@/services/authApi';
 import './DetailNew.css';
 
 const { TextArea } = Input;
@@ -72,6 +81,8 @@ const CadreDetailNew = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const user = useSelector((state: RootState) => state.auth.user);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<CadreBasicInfo | null>(null);
   const [fromMatch, setFromMatch] = useState(false);
@@ -79,11 +90,65 @@ const CadreDetailNew = () => {
   const [mainTab, setMainTab] = useState('ability'); // 新的主tab: ability | ai | career
   const [matchResult, setMatchResult] = useState<any>(null); // 岗位匹配结果
 
+  // 修改密码相关
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [passwordForm] = Form.useForm();
+  const [passwordLoading, setPasswordLoading] = useState(false);
+
+  // 判断当前用户是否为人才本人
+  const isCadreUser = user?.user_type === 'cadre';
+  const isOwnProfile = isCadreUser && user?.cadre_id === Number(id);
+  const canEdit = !isCadreUser; // 人才本人不能编辑
+
+  // 退出登录
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
+
+  // 修改密码
+  const handleChangePassword = async (values: { old_password: string; new_password: string }) => {
+    if (!id) return;
+    setPasswordLoading(true);
+    try {
+      await cadreApi.changePassword(Number(id), values);
+      message.success('密码修改成功，请重新登录');
+      setPasswordModalVisible(false);
+      passwordForm.resetFields();
+      handleLogout();
+    } catch (error: any) {
+      message.error(error.response?.data?.message || '修改密码失败');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  // 用户下拉菜单项
+  const userMenuItems: MenuProps['items'] = [
+    {
+      key: 'change-password',
+      icon: <LockOutlined />,
+      label: '修改密码',
+      onClick: () => setPasswordModalVisible(true),
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: '退出登录',
+      onClick: handleLogout,
+    },
+  ];
+
   // 干部履历相关
   const [careerModalVisible, setCareerModalVisible] = useState(false);
   const [careerData, setCareerData] = useState<CadreDynamicInfo[]>([]);
   const [activeTab, setActiveTab] = useState('1');
   const [editingCareer, setEditingCareer] = useState<CadreDynamicInfo | null>(null);
+  const [viewingCareer, setViewingCareer] = useState<CadreDynamicInfo | null>(null);
+  const [careerDetailVisible, setCareerDetailVisible] = useState(false);
   const [careerForm] = Form.useForm();
 
   // 岗位列表
@@ -214,12 +279,8 @@ const CadreDetailNew = () => {
           average_score: Number((data.total / data.count).toFixed(1)),
         }));
 
-        console.log('=== hardcorePosition 调试 ===');
-        console.log('能力得分:', scores);
-
         // 找出得分低于3分的维度
         const weakScores = scores.filter(s => s.average_score < 3);
-        console.log('低于3分的维度:', weakScores);
 
         if (weakScores.length === 0) {
           return '各能力维度比较均衡，没有明显的短板。';
@@ -229,7 +290,6 @@ const CadreDetailNew = () => {
         const weakest = weakScores.reduce((min, current) =>
           current.average_score < min.average_score ? current : min
         );
-        console.log('最薄弱维度:', weakest);
 
         // 在所有岗位中找到这个维度权重值最高的岗位
         const positionWeightMap: any[] = [];
@@ -245,14 +305,11 @@ const CadreDetailNew = () => {
           }
         });
 
-        console.log('找到的岗位权重映射:', positionWeightMap);
-
         // 按权重值排序（从高到低）
         positionWeightMap.sort((a, b) => b.weight - a.weight);
 
         if (positionWeightMap.length === 0) {
           // 没有找到任何岗位包含该维度权重，返回默认提示
-          console.log('没有找到任何岗位包含该维度的权重');
           return `${weakest.dimension}(${weakest.average_score}分)比较薄弱，建议在相关岗位进行锻炼提升能力。`;
         }
 
@@ -266,9 +323,6 @@ const CadreDetailNew = () => {
         // 随机打乱（如果超过3个的话随机取3个）
         const shuffled = topPositions.sort(() => Math.random() - 0.5);
         const selectedPositions = shuffled.slice(0, 3);
-
-        console.log('最终选中的岗位:', selectedPositions);
-        console.log('========================');
 
         return `${weakest.dimension}(${weakest.average_score}分)比较薄弱，建议在${selectedPositions.join('、')}进行锻炼提升能力。`;
       })() : '各能力维度比较均衡，没有明显的短板。',
@@ -286,20 +340,6 @@ const CadreDetailNew = () => {
         ...(item.info_type === 6 && { work_company: item.work_company, work_position: item.work_position }),
       })) : null,
     };
-
-    // 打印调试信息 - 岗位列表数据
-    console.log('=== 岗位列表数据 ===');
-    console.log('positionList:', positionList);
-    console.log('positionList length:', positionList.length);
-    if (positionList.length > 0) {
-      console.log('第一个岗位数据:', JSON.stringify(positionList[0], null, 2));
-    }
-    console.log('====================');
-
-    // 打印AI分析的完整数据
-    console.log('=== AI分析 - 干部完整数据 ===');
-    console.log(JSON.stringify(cadreData, null, 2));
-    console.log('=============================');
 
     // 构建AI提示词 - 面向干部个人的分析报告
     const prompt = `你是一位资深的职业发展导师和人才成长顾问。请基于以下干部的完整数据，生成一份面向干部个人发展的分析报告。
@@ -431,7 +471,6 @@ ${JSON.stringify(cadreData, null, 2)}
       // 404 或其他错误时不做任何处理，不显示错误提示
     } catch (error) {
       // 静默处理错误
-      console.log('No AI analysis history found');
     }
   };
 
@@ -458,9 +497,7 @@ ${JSON.stringify(cadreData, null, 2)}
     if (!id) return;
     try {
       const response = await matchApi.getResults({ cadre_id: Number(id), position_id: positionId });
-      console.log('Match result response:', response);
       const result = response.data.data?.items?.[0];
-      console.log('Parsed match result:', result);
       if (result) {
         setMatchResult(result);
       }
@@ -471,6 +508,13 @@ ${JSON.stringify(cadreData, null, 2)}
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
+
+    // 权限检查：人才用户只能查看自己的详情页
+    if (isCadreUser && !isOwnProfile) {
+      message.error('无权查看其他人才信息');
+      navigate(`/cadre/${user?.cadre_id}`);
+      return;
+    }
 
     fetchData();
     if (id) {
@@ -494,13 +538,6 @@ ${JSON.stringify(cadreData, null, 2)}
     try {
       const response = await positionApi.getAll();
       const positions = response.data.data || [];
-      console.log('=== fetchPositionList 获取到的岗位数据 ===');
-      console.log('岗位数量:', positions.length);
-      if (positions.length > 0) {
-        console.log('第一个岗位完整数据:', JSON.stringify(positions[0], null, 2));
-        console.log('第一个岗位的ability_weights:', positions[0].ability_weights);
-      }
-      console.log('==========================================');
       setPositionList(positions);
     } catch (error) {
       console.error('Failed to fetch position list:', error);
@@ -531,6 +568,11 @@ ${JSON.stringify(cadreData, null, 2)}
     careerForm.resetFields();
     careerForm.setFieldsValue({ info_type: infoType });
     setCareerModalVisible(true);
+  };
+
+  const handleCareerView = (record: CadreDynamicInfo) => {
+    setViewingCareer(record);
+    setCareerDetailVisible(true);
   };
 
   const handleCareerEdit = (record: CadreDynamicInfo) => {
@@ -952,9 +994,11 @@ ${JSON.stringify(cadreData, null, 2)}
               <div className="card-header">
                 <ThunderboltOutlined className="card-icon" />
                 <h3 className="card-title">能力评估</h3>
-                <button className="add-btn" onClick={handleAbilityEdit}>
-                  <EditOutlined /> 设置
-                </button>
+                {canEdit && (
+                  <button className="add-btn" onClick={handleAbilityEdit}>
+                    <EditOutlined /> 设置
+                  </button>
+                )}
               </div>
               <div className="card-body">
                 {abilityData.length > 0 ? (
@@ -980,9 +1024,11 @@ ${JSON.stringify(cadreData, null, 2)}
             <div className="card-header">
               <BulbOutlined className="card-icon" />
               <h3 className="card-title">特质分析</h3>
-              <button className="add-btn" onClick={handleTraitEdit}>
-                <EditOutlined /> 设置
-              </button>
+              {canEdit && (
+                <button className="add-btn" onClick={handleTraitEdit}>
+                  <EditOutlined /> 设置
+                </button>
+              )}
             </div>
             <div className="card-body">
               {traitData.length > 0 ? (
@@ -1032,14 +1078,16 @@ ${JSON.stringify(cadreData, null, 2)}
                 <div className="card-header">
                   <RobotOutlined className="card-icon" />
                   <h3 className="card-title">AI智能分析</h3>
-                  <Button
-                    type="primary"
-                    icon={<RobotOutlined />}
-                    onClick={handleAIAnalysis}
-                    loading={aiLoading}
-                  >
-                    重新分析
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      type="primary"
+                      icon={<RobotOutlined />}
+                      onClick={handleAIAnalysis}
+                      loading={aiLoading}
+                    >
+                      重新分析
+                    </Button>
+                  )}
                 </div>
                 <div className="card-body">
                   {aiLoading ? (
@@ -1146,14 +1194,20 @@ ${JSON.stringify(cadreData, null, 2)}
                         {type.value === 5 && '记录人才岗位任免和变更信息'}
                         {type.value === 6 && '记录人才过往的工作经历'}
                       </span>
-                      <button className="add-btn-sm" onClick={() => handleCareerAdd(type.value)}>
-                        <EditOutlined /> 添加{type.label}
-                      </button>
+                      {canEdit && (
+                        <button className="add-btn-sm" onClick={() => handleCareerAdd(type.value)}>
+                          <EditOutlined /> 添加{type.label}
+                        </button>
+                      )}
                     </div>
                     {typeData.length > 0 ? (
                       <div className="career-list">
                         {typeData.map((item) => (
-                          <div key={item.id} className="career-item">
+                          <div
+                            key={item.id}
+                            className="career-item"
+                            onClick={() => handleCareerView(item)}
+                          >
                             <div className="career-header">
                               <span className="career-title">
                                 {type.value === 1 && (
@@ -1209,22 +1263,30 @@ ${JSON.stringify(cadreData, null, 2)}
                                 )}
                               </span>
                               <div className="career-actions-inline">
-                                <button
-                                  className="action-btn"
-                                  onClick={() => handleCareerEdit(item)}
-                                >
-                                  <EditOutlined />
-                                </button>
-                                <Popconfirm
-                                  title="确定删除？"
-                                  onConfirm={() => handleCareerDelete(item.id!)}
-                                  okText="确定"
-                                  cancelText="取消"
-                                >
-                                  <button className="action-btn action-btn-delete">
-                                    <DeleteOutlined />
-                                  </button>
-                                </Popconfirm>
+                                {canEdit && (
+                                  <>
+                                    <button
+                                      className="action-btn"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleCareerEdit(item);
+                                      }}
+                                    >
+                                      <EditOutlined />
+                                    </button>
+                                    <Popconfirm
+                                      title="确定删除？"
+                                      onConfirm={() => handleCareerDelete(item.id!)}
+                                      okText="确定"
+                                      cancelText="取消"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <button className="action-btn action-btn-delete">
+                                        <DeleteOutlined />
+                                      </button>
+                                    </Popconfirm>
+                                  </>
+                                )}
                               </div>
                             </div>
 
@@ -1359,20 +1421,59 @@ ${JSON.stringify(cadreData, null, 2)}
 
   return (
     <div className="cadre-detail-page">
-      {/* 返回按钮 */}
-      <button
-        className="back-btn"
-        onClick={() => {
-          if (fromMatch) {
-            navigate('/match');
-          } else {
-            navigate('/cadre');
-          }
-        }}
-        title="返回"
-      >
-        <ArrowLeftOutlined />
-      </button>
+      {/* 返回按钮 - 人才用户不显示 */}
+      {!isCadreUser && (
+        <button
+          className="back-btn"
+          onClick={() => {
+            if (fromMatch) {
+              navigate('/match');
+            } else {
+              navigate('/cadre');
+            }
+          }}
+          title="返回"
+        >
+          <ArrowLeftOutlined />
+        </button>
+      )}
+
+      {/* 人才用户顶部头部 */}
+      {isCadreUser && (
+        <nav className="top-navigation">
+          <div className="nav-container">
+            {/* Logo - 不可点击 */}
+            <div className="nav-logo">
+              <div className="logo-icon">
+                <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <polygon points="50,5 95,30 95,70 50,95 5,70 5,30" stroke="currentColor" strokeWidth="2" fill="none"/>
+                  <polygon points="50,20 80,35 80,65 50,80 20,65 20,35" fill="currentColor" opacity="0.3"/>
+                  <circle cx="50" cy="50" r="10" fill="currentColor"/>
+                </svg>
+              </div>
+              <div className="logo-text">
+                <span className="logo-title">Talkweb</span>
+                <span className="logo-subtitle">人才管理全量模型平台</span>
+              </div>
+            </div>
+
+            {/* 中间菜单区域 - 空白，保持布局一致 */}
+            <div className="nav-menu"></div>
+
+            {/* 右侧用户菜单 */}
+            <div className="nav-right">
+              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['hover']}>
+                <div className="nav-user">
+                  <div className="user-avatar">
+                    <UserOutlined />
+                  </div>
+                  <span className="user-name">{data?.name || user?.real_name}</span>
+                </div>
+              </Dropdown>
+            </div>
+          </div>
+        </nav>
+      )}
 
       {/* 主内容区域 - 左右布局 */}
       <div className="detail-content-split">
@@ -1382,12 +1483,14 @@ ${JSON.stringify(cadreData, null, 2)}
             <div className="card-header">
               <UserOutlined className="card-icon" />
               <h3 className="card-title">基本信息</h3>
-              <button
-                className="add-btn"
-                onClick={() => navigate(`/cadre/${id}/edit`)}
-              >
-                <EditOutlined /> 编辑
-              </button>
+              {canEdit && (
+                <button
+                  className="add-btn"
+                  onClick={() => navigate(`/cadre/${id}/edit`)}
+                >
+                  <EditOutlined /> 编辑
+                </button>
+              )}
             </div>
             <div className="card-body">
               {/* 核心信息区域 */}
@@ -1444,6 +1547,12 @@ ${JSON.stringify(cadreData, null, 2)}
                     <span className="info-label">工作省份</span>
                     <span className="info-value">{data.work_province || '-'}</span>
                   </div>
+                </div>
+
+                {/* 手机号码 - 单独占一行 */}
+                <div className="info-row full-width">
+                  <span className="info-label">手机号码</span>
+                  <span className="info-value">{data.phone || '-'}</span>
                 </div>
 
                 {/* 部门 - 单独占一行 */}
@@ -1828,6 +1937,250 @@ ${JSON.stringify(cadreData, null, 2)}
               </Select>
             </Form.Item>
           ))}
+        </Form>
+      </Modal>
+
+      {/* 履历详情查看Modal */}
+      <Modal
+        title={`查看${viewingCareer ? DYNAMIC_INFO_TYPE_OPTIONS.find(t => t.value === viewingCareer.info_type)?.label : '履历'}详情`}
+        open={careerDetailVisible}
+        onCancel={() => {
+          setCareerDetailVisible(false);
+          setViewingCareer(null);
+        }}
+        footer={null}
+        width={700}
+        className="modern-modal career-detail-modal"
+      >
+        {viewingCareer && (
+          <div className="career-detail-content">
+            <div className="form-section">
+              <div className="form-section-title">{DYNAMIC_INFO_TYPE_OPTIONS.find(t => t.value === viewingCareer.info_type)?.label}</div>
+              <div className="detail-grid">
+                {/* 培训记录字段 */}
+                {viewingCareer.info_type === 1 && (
+                  <>
+                    <div className="detail-item">
+                      <span className="detail-label">培训名称</span>
+                      <span className="detail-value">{viewingCareer.training_name || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">培训日期</span>
+                      <span className="detail-value">{viewingCareer.training_date || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">培训内容</span>
+                      <span className="detail-value">{viewingCareer.training_content || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">培训结果</span>
+                      <span className="detail-value">{viewingCareer.training_result || '-'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 项目经历字段 */}
+                {viewingCareer.info_type === 2 && (
+                  <>
+                    <div className="detail-item">
+                      <span className="detail-label">项目编号</span>
+                      <span className="detail-value">{viewingCareer.project_no || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">项目名称</span>
+                      <span className="detail-value">{viewingCareer.project_name || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">项目角色</span>
+                      <span className="detail-value">{viewingCareer.project_role || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">开始日期</span>
+                      <span className="detail-value">{viewingCareer.project_start_date || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">结束日期</span>
+                      <span className="detail-value">{viewingCareer.project_end_date || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">项目结果</span>
+                      <span className="detail-value">{viewingCareer.project_result || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">项目评级</span>
+                      <span className="detail-value">{viewingCareer.project_rating || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">核心项目</span>
+                      <span className="detail-value">{viewingCareer.is_core_project ? '是' : '否'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 绩效数据字段 */}
+                {viewingCareer.info_type === 3 && (
+                  <>
+                    <div className="detail-item">
+                      <span className="detail-label">考核周期</span>
+                      <span className="detail-value">{viewingCareer.assessment_cycle || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">考核维度</span>
+                      <span className="detail-value">{viewingCareer.assessment_dimension || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">考核等级</span>
+                      <span className="detail-value">{viewingCareer.assessment_grade || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">考核评价</span>
+                      <span className="detail-value">{viewingCareer.assessment_comment || '-'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 奖惩记录字段 */}
+                {viewingCareer.info_type === 4 && (
+                  <>
+                    <div className="detail-item">
+                      <span className="detail-label">奖惩类型</span>
+                      <span className="detail-value">{viewingCareer.reward_type || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">奖惩日期</span>
+                      <span className="detail-value">{viewingCareer.reward_date || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">奖惩原因</span>
+                      <span className="detail-value">{viewingCareer.reward_reason || '-'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 岗位变更字段 */}
+                {viewingCareer.info_type === 5 && (
+                  <>
+                    <div className="detail-item">
+                      <span className="detail-label">岗位名称</span>
+                      <span className="detail-value">{viewingCareer.position_name || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">任命类型</span>
+                      <span className="detail-value">{viewingCareer.appointment_type || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">职责描述</span>
+                      <span className="detail-value">{viewingCareer.responsibility || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">任期开始</span>
+                      <span className="detail-value">{viewingCareer.term_start_date || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">任期结束</span>
+                      <span className="detail-value">{viewingCareer.term_end_date || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">审批记录</span>
+                      <span className="detail-value">{viewingCareer.approval_record || '-'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 工作经历字段 */}
+                {viewingCareer.info_type === 6 && (
+                  <>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">工作单位</span>
+                      <span className="detail-value">{viewingCareer.work_company || '-'}</span>
+                    </div>
+                    <div className="detail-item full-width">
+                      <span className="detail-label">工作岗位</span>
+                      <span className="detail-value">{viewingCareer.work_position || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">开始日期</span>
+                      <span className="detail-value">{viewingCareer.work_start_date || '-'}</span>
+                    </div>
+                    <div className="detail-item">
+                      <span className="detail-label">结束日期</span>
+                      <span className="detail-value">{viewingCareer.work_end_date || '-'}</span>
+                    </div>
+                  </>
+                )}
+
+                {/* 备注字段 - 所有类型通用 */}
+                {viewingCareer.remark && (
+                  <div className="detail-item full-width">
+                    <span className="detail-label">备注</span>
+                    <span className="detail-value">{viewingCareer.remark}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* 修改密码Modal */}
+      <Modal
+        title="修改密码"
+        open={passwordModalVisible}
+        onCancel={() => {
+          setPasswordModalVisible(false);
+          passwordForm.resetFields();
+        }}
+        onOk={() => passwordForm.submit()}
+        confirmLoading={passwordLoading}
+        okText="确认修改"
+        cancelText="取消"
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          onFinish={handleChangePassword}
+        >
+          <Form.Item
+            label="原始密码"
+            name="old_password"
+            rules={[{ required: true, message: '请输入原始密码' }]}
+          >
+            <Input.Password placeholder="请输入原始密码" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="新密码"
+            name="new_password"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, max: 18, message: '新密码长度为6-18位' },
+              {
+                pattern: /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]*$/,
+                message: '新密码需要包含字母和数字',
+              },
+            ]}
+          >
+            <Input.Password placeholder="请输入新密码" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="确认新密码"
+            name="confirm_password"
+            dependencies={['new_password']}
+            rules={[
+              { required: true, message: '请再次输入新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('new_password') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password placeholder="请再次输入新密码" size="large" />
+          </Form.Item>
         </Form>
       </Modal>
     </div>

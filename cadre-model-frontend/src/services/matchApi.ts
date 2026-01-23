@@ -61,6 +61,12 @@ export const matchApi = {
       '/match/results/current-position'
     ),
 
+  // 快速检查是否有当前岗位匹配数据（轻量级查询）
+  checkCurrentPositionHasData: () =>
+    apiClient.get<ApiResponse<{ has_data: boolean }>>(
+      '/match/results/current-position/has-data'
+    ),
+
   // 获取匹配结果详情
   getResultDetail: (id: number) =>
     apiClient.get<ApiResponse<MatchResult>>(`/match/results/${id}`),

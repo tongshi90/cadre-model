@@ -126,6 +126,10 @@ const CadreEdit = () => {
                 <Input autoComplete="off" />
               </Form.Item>
 
+              <Form.Item label="手机号" name="phone">
+                <Input placeholder="请输入手机号" autoComplete="off" />
+              </Form.Item>
+
               <Form.Item label="性别" name="gender">
                 <Select placeholder="请选择性别" options={GENDER_OPTIONS} />
               </Form.Item>

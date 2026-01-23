@@ -148,13 +148,10 @@ def update_position_weights(id):
         PositionService.update_position_weights(id, data)
         return success_response(None, '更新成功')
     except ValidationError as e:
-        print(f"ValidationError: {e.messages}")  # 打印详细错误
         return error_response('数据验证失败', 400, e.messages)
     except ValueError as e:
-        print(f"ValueError: {str(e)}")  # 打印详细错误
         return error_response(str(e), 400)
     except Exception as e:
-        print(f"Exception: {str(e)}")  # 打印详细错误
         return error_response(str(e), 500)
 
 

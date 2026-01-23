@@ -30,6 +30,7 @@ export interface CadreBasicInfo {
   id: number;
   employee_no: string;
   name: string;
+  phone?: string;
   department_id?: number;
   department?: Department;
   position_id?: number;
@@ -255,6 +256,8 @@ export interface User {
   department?: string;
   status: number;
   is_admin: number;
+  user_type?: 'admin' | 'cadre';
+  cadre_id?: number;
   last_login_time?: string;
   last_login_ip?: string;
 }

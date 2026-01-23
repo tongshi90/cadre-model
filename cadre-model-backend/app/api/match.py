@@ -119,6 +119,18 @@ def get_current_position_match_results():
         return error_response(str(e), 500)
 
 
+@match_bp.route('/match/results/current-position/has-data', methods=['GET'])
+@token_required
+@log_operation('match', 'query')
+def check_current_position_has_data():
+    """快速检查是否有当前岗位匹配数据（轻量级查询）"""
+    try:
+        has_data = MatchService.check_current_position_has_data()
+        return success_response({'has_data': has_data}, '检查成功')
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
 @match_bp.route('/match/results/<int:id>/report', methods=['GET'])
 @token_required
 @log_operation('match', 'create')

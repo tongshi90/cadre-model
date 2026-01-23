@@ -5,6 +5,7 @@ from marshmallow import ValidationError
 from app.api import system_bp
 from app import db
 from app.models.system import User
+from app.models.cadre import CadreBasicInfo
 from app.schemas.system_schema import LoginSchema, UserCreateSchema
 from app.utils.helpers import success_response, error_response
 from app.utils.decorators import log_operation, token_required
@@ -15,36 +16,72 @@ import re
 @system_bp.route('/auth/login', methods=['POST'])
 @log_operation('system', 'create')
 def login():
-    """用户登录"""
+    """用户登录 - 支持管理员登录和人才登录"""
     try:
         schema = LoginSchema()
         data = schema.load(request.json)
 
+        # 先尝试管理员登录
         user = User.query.filter_by(username=data['username']).first()
 
-        if not user or not user.check_password(data['password']):
-            return error_response('用户名或密码错误', 401)
+        if user and user.check_password(data['password']):
+            if user.status != 1:
+                return error_response('账号已被停用', 403)
 
-        if user.status != 1:
-            return error_response('账号已被停用', 403)
+            # 更新登录信息
+            user.last_login_time = datetime.now()
+            user.last_login_ip = request.remote_addr
+            db.session.commit()
 
-        # 更新登录信息
-        user.last_login_time = datetime.now()
-        user.last_login_ip = request.remote_addr
-        db.session.commit()
+            # 生成token - 管理员用户
+            token = jwt.encode({
+                'user_id': user.id,
+                'username': user.username,
+                'is_admin': user.is_admin,
+                'user_type': 'admin',
+                'exp': datetime.now() + current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+            }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
 
-        # 生成token
-        token = jwt.encode({
-            'user_id': user.id,
-            'username': user.username,
-            'is_admin': user.is_admin,
-            'exp': datetime.now() + current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
-        }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+            user_dict = user.to_dict()
+            user_dict['user_type'] = 'admin'
 
-        return success_response({
-            'token': token,
-            'user': user.to_dict()
-        }, '登录成功')
+            return success_response({
+                'token': token,
+                'user': user_dict
+            }, '登录成功')
+
+        # 再尝试人才登录（手机号作为账号）
+        cadre = CadreBasicInfo.query.filter_by(phone=data['username']).first()
+
+        if cadre and cadre.password and cadre.check_password(data['password']):
+            if cadre.status != 1:
+                return error_response('账号已被停用', 403)
+
+            # 生成token - 人才用户
+            token = jwt.encode({
+                'user_id': cadre.id,
+                'username': cadre.name,
+                'user_type': 'cadre',
+                'cadre_id': cadre.id,
+                'exp': datetime.now() + current_app.config['JWT_ACCESS_TOKEN_EXPIRES']
+            }, current_app.config['JWT_SECRET_KEY'], algorithm='HS256')
+
+            # 构造人才用户信息
+            cadre_user_info = {
+                'id': cadre.id,
+                'username': cadre.phone,
+                'real_name': cadre.name,
+                'user_type': 'cadre',
+                'cadre_id': cadre.id
+            }
+
+            return success_response({
+                'token': token,
+                'user': cadre_user_info
+            }, '登录成功')
+
+        return error_response('用户名或密码错误', 401)
+
     except ValidationError as e:
         return error_response('数据验证失败', 400, e.messages)
     except Exception as e:

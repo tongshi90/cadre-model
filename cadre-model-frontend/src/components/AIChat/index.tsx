@@ -37,7 +37,7 @@ const AIChat: React.FC<AIChatProps> = ({ iframeUrl = 'http://localhost:5173/home
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // 发送消息
+  // 发送消息（流式）
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -52,45 +52,105 @@ const AIChat: React.FC<AIChatProps> = ({ iframeUrl = 'http://localhost:5173/home
     setChatMessages(newMessages);
     setIsLoading(true);
 
+    // 添加一个空的助手消息用于流式更新
+    const assistantMessageIndex = newMessages.length;
+    setChatMessages(prev => [...prev, { role: 'assistant', content: '' }]);
+
+    // 获取 API 基础地址
+    const apiBaseUrl = window.config?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL || '/api';
+    const token = localStorage.getItem('token');
+
     try {
-      const response = await apiClient.post('/weekly-report/ai-chat', {
-        message: userMessage,
-        history: newMessages
-      }, {
-        timeout: 120000 // 120秒超时
+      const response = await fetch(`${apiBaseUrl}/weekly-report/ai-chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : '',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          history: newMessages
+        }),
       });
 
-      if (response.data.code === 200) {
-        setChatMessages([
-          ...newMessages,
-          { role: 'assistant', content: response.data.data.reply }
-        ]);
-      } else {
-        setChatMessages([
-          ...newMessages,
-          { role: 'assistant', content: response.data.message || '抱歉，AI服务暂时不可用，请稍后再试。' }
-        ]);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) {
+        throw new Error('无法获取响应流');
+      }
+
+      let buffer = '';
+      let accumulatedContent = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        // 解码数据块
+        const chunk = decoder.decode(value, { stream: true });
+        buffer += chunk;
+
+        // 处理 SSE 格式的数据
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || ''; // 保留不完整的行
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6).trim();
+
+            if (data === '[DONE]') {
+              setIsLoading(false);
+              break;
+            }
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                accumulatedContent += parsed.content;
+                // 更新消息内容
+                setChatMessages(prev => {
+                  const newMessages = [...prev];
+                  if (newMessages[assistantMessageIndex]) {
+                    newMessages[assistantMessageIndex] = {
+                      role: 'assistant',
+                      content: accumulatedContent
+                    };
+                  }
+                  return newMessages;
+                });
+              }
+            } catch (e) {
+              console.error('Failed to parse SSE data:', e);
+            }
+          }
+        }
+      }
+
+      setIsLoading(false);
     } catch (error: any) {
       console.error('AI chat error:', error);
       let errorMsg = '抱歉，网络连接出现问题，请检查网络后重试。';
 
-      if (error.response) {
-        console.error('Response error:', error.response.data);
-        errorMsg = `服务错误: ${error.response.data?.message || error.response.status}`;
-      } else if (error.request) {
-        console.error('Request error:', error.request);
-        errorMsg = '请求超时，请稍后重试';
-      } else {
-        console.error('Error:', error.message);
+      if (error.message) {
         errorMsg = `请求失败: ${error.message}`;
       }
 
-      setChatMessages([
-        ...newMessages,
-        { role: 'assistant', content: errorMsg }
-      ]);
-    } finally {
+      setChatMessages(prev => {
+        const newMessages = [...prev];
+        if (newMessages[assistantMessageIndex]) {
+          newMessages[assistantMessageIndex] = {
+            role: 'assistant',
+            content: errorMsg
+          };
+        }
+        return newMessages;
+      });
       setIsLoading(false);
     }
   };
@@ -164,26 +224,21 @@ const AIChat: React.FC<AIChatProps> = ({ iframeUrl = 'http://localhost:5173/home
             {/* 对话消息列表 */}
             {chatMessages.length > 0 && (
               <div className="ai-analysis-messages">
-                {chatMessages.map((msg, index) => (
-                  <div key={index} className={`message ${msg.role}`}>
-                    <div className="message-avatar">
-                      {msg.role === 'user' ? <FileTextOutlined /> : <RobotOutlined />}
+                {chatMessages.map((msg, index) => {
+                  const isLastAssistant = index === chatMessages.length - 1 && msg.role === 'assistant';
+                  const isStreaming = isLastAssistant && isLoading;
+                  return (
+                    <div key={index} className={`message ${msg.role}`}>
+                      <div className="message-avatar">
+                        {msg.role === 'user' ? <FileTextOutlined /> : <RobotOutlined />}
+                      </div>
+                      <div className="message-content">
+                        {msg.content}
+                        {isStreaming && <span className="streaming-cursor"></span>}
+                      </div>
                     </div>
-                    <div className="message-content">{msg.content}</div>
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="message assistant">
-                    <div className="message-avatar">
-                      <RobotOutlined />
-                    </div>
-                    <div className="message-content loading">
-                      <span className="loading-dot"></span>
-                      <span className="loading-dot"></span>
-                      <span className="loading-dot"></span>
-                    </div>
-                  </div>
-                )}
+                  );
+                })}
                 <div ref={messagesEndRef} />
               </div>
             )}

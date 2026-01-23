@@ -47,6 +47,10 @@ export const cadreApi = {
   // 更新干部能力评分
   updateAbilities: (id: number, abilities: any[]) =>
     apiClient.put<ApiResponse>(`/cadres/${id}/abilities`, { abilities }),
+
+  // 修改人才密码
+  changePassword: (id: number, data: { old_password: string; new_password: string }) =>
+    apiClient.post<ApiResponse>(`/cadres/${id}/change-password`, data),
 };
 
 // 部门API

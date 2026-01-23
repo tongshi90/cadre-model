@@ -10,6 +10,18 @@
   position: relative;
 }
 
+/* 人才用户登录时 - 抵消app-main的padding-top，让导航栏固定在顶部 */
+.cadre-detail-page:has(.top-navigation) {
+  margin-top: -72px;
+}
+
+/* 移动端响应式 */
+@media (max-width: 768px) {
+  .cadre-detail-page:has(.top-navigation) {
+    margin-top: -64px;
+  }
+}
+
 /* ============================================
    加载状态
    ============================================ */
@@ -31,7 +43,7 @@
 
 .back-btn {
   position: fixed;
-  top: 80px;
+  top: calc(72px + 8px);
   left: 24px;
   z-index: 9999;
   width: 44px;
@@ -503,6 +515,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 10px;
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .career-item:hover {
@@ -1064,6 +1077,11 @@
   padding: 32px 24px;
 }
 
+/* 当页面顶部有导航栏时，增加顶部padding */
+.cadre-detail-page:has(.top-navigation) .detail-content-split {
+  padding-top: calc(32px + 72px);
+}
+
 /* 左侧面板 - 基本信息固定显示 */
 .left-panel {
   width: 360px;
@@ -1230,6 +1248,30 @@
 }
 
 .match-card .card-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 特质分析卡片标题居中，按钮靠右 */
+.trait-card .card-header {
+  justify-content: space-between;
+  position: relative;
+}
+
+.trait-card .card-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* 基本信息卡片标题居中，编辑按钮靠右 */
+.basic-info-card .card-header {
+  justify-content: space-between;
+  position: relative;
+}
+
+.basic-info-card .card-title {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
@@ -1698,5 +1740,53 @@
   .ai-placeholder .ant-btn {
     height: 42px;
     font-size: 15px;
+  }
+}
+
+/* ============================================
+   履历详情查看Modal样式
+   ============================================ */
+
+.career-detail-content {
+  padding: 8px 0;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 24px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-item.full-width {
+  grid-column: span 2;
+}
+
+.detail-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+.detail-value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+/* 响应式 - 履历详情 */
+@media (max-width: 600px) {
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-item.full-width {
+    grid-column: span 1;
   }
 }

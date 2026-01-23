@@ -15,6 +15,8 @@ class CadreBasicInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     employee_no = db.Column(db.String(50), nullable=False, unique=True, comment='工号')
     name = db.Column(db.String(100), nullable=False, comment='姓名')
+    phone = db.Column(db.String(20), comment='手机号')
+    password = db.Column(db.String(255), comment='密码')
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), comment='部门ID')
     position_id = db.Column(db.Integer, db.ForeignKey('position_info.id'), comment='岗位ID')
     job_grade = db.Column(db.Integer, comment='岗级')
@@ -45,6 +47,7 @@ class CadreBasicInfo(db.Model):
             'id': self.id,
             'employee_no': self.employee_no,
             'name': self.name,
+            'phone': self.phone,
             'department_id': self.department_id,
             'department': self.department.to_dict() if self.department else None,
             'position_id': self.position_id,
@@ -65,6 +68,16 @@ class CadreBasicInfo(db.Model):
             'create_time': self.create_time.isoformat() if self.create_time else None,
             'update_time': self.update_time.isoformat() if self.update_time else None
         }
+
+    def set_password(self, password):
+        """设置密码"""
+        import bcrypt
+        self.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
+    def check_password(self, password):
+        """验证密码"""
+        import bcrypt
+        return bcrypt.checkpw(password.encode('utf-8'), self.password.encode('utf-8'))
 
 
 class CadreDynamicInfo(db.Model):

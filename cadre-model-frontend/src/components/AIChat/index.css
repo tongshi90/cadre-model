@@ -436,6 +436,7 @@
   line-height: 1.6;
   word-wrap: break-word;
   white-space: pre-wrap;
+  caret-color: transparent;
 }
 
 .message.user .message-content {
@@ -483,6 +484,26 @@
   }
   30% {
     transform: translateY(-8px);
+  }
+}
+
+/* 流式输出光标 */
+.streaming-cursor {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  background: #d4af37;
+  margin-left: 2px;
+  animation: cursorBlink 1s step-end infinite;
+  vertical-align: middle;
+}
+
+@keyframes cursorBlink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
   }
 }
 
