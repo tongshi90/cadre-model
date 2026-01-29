@@ -66,6 +66,25 @@
   min-width: 300px;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.secondary-btn {
+  height: 40px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--color-text-primary);
+}
+
+.secondary-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-accent-gold);
+  color: var(--color-accent-gold);
+}
+
 .search-input {
   flex: 1;
   max-width: 400px;
@@ -699,4 +718,59 @@
     top: 12px;
     right: 12px;
   }
+}
+
+/* ============================================
+   Drawer Styles
+   ============================================ */
+
+.position-drawer .ant-drawer-content {
+  background: var(--color-bg-primary);
+}
+
+.position-drawer .ant-drawer-header {
+  background: rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.position-drawer .ant-drawer-title {
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.position-drawer .ant-drawer-close {
+  color: var(--color-text-secondary);
+}
+
+.position-drawer .ant-drawer-close:hover {
+  color: var(--color-text-primary);
+}
+
+.position-drawer .ant-drawer-body {
+  padding: 0;
+  overflow-y: auto;
+}
+
+.drawer-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.empty-description {
+  text-align: center;
+}
+
+.empty-description .empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: 8px;
+}
+
+.empty-description .empty-subtitle {
+  font-size: 14px;
+  color: var(--color-text-secondary);
 }

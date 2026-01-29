@@ -27,9 +27,6 @@ class Config:
     # 当需要连接 MySQL 服务器但不指定数据库时（用于创建数据库）
     SQLALCHEMY_DATABASE_URI_NO_DB = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}?charset=utf8mb4"
 
-    # CORS配置
-    CORS_ORIGINS = os.environ.get('FRONTEND_URL', 'http://localhost:5173').split(',')
-
     # 文件上传配置
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'data', 'uploads')

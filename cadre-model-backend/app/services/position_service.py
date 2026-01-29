@@ -1,5 +1,7 @@
 from typing import List, Dict, Optional
 from app.models.position import PositionInfo, PositionAbilityWeight, PositionRequirement
+from app.models.major import Major
+from app.models.certificate import Certificate
 from app import db
 
 
@@ -158,26 +160,29 @@ class PositionService:
         获取岗位要求
 
         Returns:
-            包含硬性要求和建议要求的字典
+            包含硬性要求和加分项的字典
         """
-        requirements = PositionRequirement.query.filter_by(position_id=position_id).all()
+        requirements = PositionRequirement.query.filter_by(
+            position_id=position_id,
+            status=1
+        ).order_by(PositionRequirement.sort_order).all()
 
         mandatory = [r for r in requirements if r.requirement_type == 'mandatory']
-        suggested = [r for r in requirements if r.requirement_type == 'suggested']
+        bonus = [r for r in requirements if r.requirement_type == 'bonus']
 
         return {
             'mandatory': [r.to_dict() for r in mandatory],
-            'suggested': [r.to_dict() for r in suggested]
+            'bonus': [r.to_dict() for r in bonus]
         }
 
     @staticmethod
-    def update_position_requirements(position_id: int, requirements: Dict) -> bool:
+    def update_position_requirements(position_id: int, requirements: List[Dict]) -> bool:
         """
         更新岗位要求
 
         Args:
             position_id: 岗位ID
-            requirements: 包含mandatory和suggested的字典
+            requirements: 岗位要求列表
 
         Returns:
             是否更新成功
@@ -186,12 +191,18 @@ class PositionService:
         PositionRequirement.query.filter_by(position_id=position_id).delete()
 
         # 添加新要求
-        for req_type in ['mandatory', 'suggested']:
-            if req_type in requirements:
-                for req_data in requirements[req_type]:
-                    req_data['requirement_type'] = req_type
-                    req = PositionRequirement(position_id=position_id, **req_data)
-                    db.session.add(req)
+        for idx, req_data in enumerate(requirements):
+            req = PositionRequirement(
+                position_id=position_id,
+                requirement_type=req_data.get('requirement_type'),
+                indicator_type=req_data.get('indicator_type'),
+                operator=req_data.get('operator', '>='),
+                compare_value=req_data.get('compare_value'),
+                score_value=req_data.get('score_value'),
+                sort_order=idx + 1,
+                status=1
+            )
+            db.session.add(req)
 
         db.session.commit()
         return True
@@ -200,3 +211,33 @@ class PositionService:
     def get_all_positions() -> List[PositionInfo]:
         """获取所有启用的岗位"""
         return PositionInfo.query.filter_by(status=1).all()
+
+    @staticmethod
+    def get_major_list() -> List[Dict]:
+        """获取专业列表（用于下拉选择）"""
+        majors = Major.query.filter_by(status=1).order_by(Major.sort_order).all()
+        # 返回扁平列表，包含层级信息
+        result = []
+        for major in majors:
+            result.append({
+                'id': major.id,
+                'name': major.name,
+                'parent_id': major.parent_id,
+                'level': 1 if major.parent_id is None else 2
+            })
+        return result
+
+    @staticmethod
+    def get_certificate_list() -> List[Dict]:
+        """获取证书列表（用于下拉选择）"""
+        certificates = Certificate.query.filter_by(status=1).order_by(Certificate.sort_order).all()
+        # 返回扁平列表，包含层级信息
+        result = []
+        for cert in certificates:
+            result.append({
+                'id': cert.id,
+                'name': cert.name,
+                'parent_id': cert.parent_id,
+                'level': 1 if cert.parent_id is None else 2
+            })
+        return result

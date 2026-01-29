@@ -20,26 +20,24 @@ def create_app(config_name='default'):
     db.init_app(app)
     migrate.init_app(app)
 
-    # Configure CORS
-    # 支持通过环境变量 FRONTEND_URL 配置，多个地址用逗号分隔
-    # 默认允许所有源（开发环境），生产环境建议配置具体的前端地址
-    cors_origins = os.environ.get('FRONTEND_URL', '*').split(',')
-
+    # Configure CORS - 完全放开，允许所有来源访问
     CORS(app,
-         resources={r"/api/*": {"origins": cors_origins}},
-         supports_credentials=True,
-         allow_headers=['Content-Type', 'Authorization'],
-         methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
-         expose_headers=['Content-Type', 'Authorization'])
+         resources={r"/api/*": {"origins": "*"}},
+         allow_headers=['*'],
+         methods=['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH'],
+         expose_headers=['*'],
+         max_age=3600)
 
     # Register API blueprints
-    from app.api import cadre_bp, position_bp, match_bp, system_bp, ai_analysis_bp, weekly_report_bp
+    from app.api import cadre_bp, position_bp, match_bp, system_bp, ai_analysis_bp, weekly_report_bp, major_bp, certificate_bp
     app.register_blueprint(cadre_bp, url_prefix='/api')
     app.register_blueprint(position_bp, url_prefix='/api')
     app.register_blueprint(match_bp, url_prefix='/api')
     app.register_blueprint(system_bp, url_prefix='/api')
     app.register_blueprint(ai_analysis_bp, url_prefix='/api')
     app.register_blueprint(weekly_report_bp, url_prefix='/api')
+    app.register_blueprint(major_bp, url_prefix='/api')
+    app.register_blueprint(certificate_bp, url_prefix='/api')
 
     # Register error handlers
     from app.utils.handlers import register_error_handlers

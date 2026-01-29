@@ -51,4 +51,24 @@ export const positionApi = {
   // 更新岗位要求
   updateRequirements: (id: number, requirements: any) =>
     apiClient.put<ApiResponse>(`/positions/${id}/requirements`, requirements),
+
+  // 获取专业列表（用于岗位要求配置）
+  getMajors: () =>
+    apiClient.get<ApiResponse<any[]>>('/metadata/majors'),
+
+  // 获取证书列表（用于岗位要求配置）
+  getCertificates: () =>
+    apiClient.get<ApiResponse<any[]>>('/metadata/certificates'),
+
+  // 获取指标类型配置
+  getIndicatorTypes: () =>
+    apiClient.get<ApiResponse<any>>('/metadata/indicator-types'),
+
+  // 获取学历选项
+  getEducationOptions: () =>
+    apiClient.get<ApiResponse<any[]>>('/metadata/education-options'),
+
+  // 获取操作符选项
+  getOperatorOptions: () =>
+    apiClient.get<ApiResponse<any[]>>('/metadata/operator-options'),
 };

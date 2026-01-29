@@ -4,12 +4,16 @@ import {
   PlusOutlined,
   TrophyOutlined,
   EditOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  BookOutlined,
+  SafetyCertificateOutlined
 } from '@ant-design/icons';
-import { Input, Button, Popconfirm, message, Pagination } from 'antd';
+import { Input, Button, Popconfirm, message, Pagination, Drawer } from 'antd';
 import ScrollReveal from '@/components/ui/ScrollReveal';
 import { positionApi } from '@/services/positionApi';
 import type { PositionInfo } from '@/types';
+import MajorManagement from './MajorManagement';
+import CertificateManagement from './CertificateManagement';
 import './ListNew.css';
 
 const { Search } = Input;
@@ -24,6 +28,8 @@ const PositionListNew = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const prevPageRef = useRef<number>(1);
+  const [majorDrawerVisible, setMajorDrawerVisible] = useState(false);
+  const [certificateDrawerVisible, setCertificateDrawerVisible] = useState(false);
 
   const fetchData = async (keyword?: string) => {
     const isPageChange = prevPageRef.current !== page;
@@ -181,15 +187,33 @@ const PositionListNew = () => {
                 onPressEnter={(e) => handleSearch((e.target as HTMLInputElement).value)}
               />
             </div>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              size="large"
-              className="add-btn"
-              onClick={() => navigate('/position/create')}
-            >
-              新增岗位
-            </Button>
+            <div className="action-buttons">
+              <Button
+                icon={<BookOutlined />}
+                size="large"
+                className="secondary-btn"
+                onClick={() => setMajorDrawerVisible(true)}
+              >
+                专业管理
+              </Button>
+              <Button
+                icon={<SafetyCertificateOutlined />}
+                size="large"
+                className="secondary-btn"
+                onClick={() => setCertificateDrawerVisible(true)}
+              >
+                证书管理
+              </Button>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                size="large"
+                className="add-btn"
+                onClick={() => navigate('/position/create')}
+              >
+                新增岗位
+              </Button>
+            </div>
           </div>
         </ScrollReveal>
 
@@ -240,6 +264,30 @@ const PositionListNew = () => {
         </div>
 
       </div>
+
+      {/* 专业管理抽屉 */}
+      <Drawer
+        title="专业管理"
+        placement="right"
+        width={600}
+        open={majorDrawerVisible}
+        onClose={() => setMajorDrawerVisible(false)}
+        className="position-drawer"
+      >
+        <MajorManagement />
+      </Drawer>
+
+      {/* 证书管理抽屉 */}
+      <Drawer
+        title="证书管理"
+        placement="right"
+        width={600}
+        open={certificateDrawerVisible}
+        onClose={() => setCertificateDrawerVisible(false)}
+        className="position-drawer"
+      >
+        <CertificateManagement />
+      </Drawer>
     </div>
   );
 };

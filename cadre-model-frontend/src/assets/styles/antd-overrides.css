@@ -646,6 +646,13 @@
   background: var(--color-accent-gold);
 }
 
+/* 隐藏 Tabs 内容区域的滚动条 */
+.ant-tabs-content,
+.ant-tabs-content-holder,
+.ant-tabs-tabpane {
+  overflow: visible !important;
+}
+
 /* ============================================
    步骤条样式
    ============================================ */

@@ -149,6 +149,28 @@
 
 .card-body {
   padding: 16px 20px;
+  overflow: visible;
+}
+
+/* 隐藏 config-card-body 和 Tabs 的滚动条 */
+.config-card-body {
+  overflow: visible !important;
+}
+
+.config-card-body .ant-tabs-content-holder {
+  overflow: visible !important;
+}
+
+.config-card-body .ant-tabs-content {
+  overflow: visible !important;
+}
+
+.config-card-body .ant-tabs-tabpane {
+  overflow: visible !important;
+}
+
+.tab-content {
+  overflow: visible;
 }
 
 /* ============================================
@@ -343,6 +365,30 @@
   margin-top: 12px;
 }
 
+/* Table 内容区域滚动条样式 */
+.config-table .ant-table-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) rgba(255, 255, 255, 0.03);
+}
+
+.config-table .ant-table-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.config-table .ant-table-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 3px;
+}
+
+.config-table .ant-table-body::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+
+.config-table .ant-table-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
+
 .config-table .ant-table {
   background: transparent;
 }
@@ -534,6 +580,13 @@
 
 .info-card .ant-tabs {
   color: var(--color-text-primary);
+}
+
+/* 隐藏 Tabs 内容区域的外层滚动条 */
+.info-card .ant-tabs-content,
+.info-card .ant-tabs-content-holder,
+.info-card .ant-tabs-tabpane {
+  overflow: visible !important;
 }
 
 .info-card .ant-tabs-tab {

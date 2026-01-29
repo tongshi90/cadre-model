@@ -18,6 +18,8 @@ from app.models.system import (
     User
 )
 from app.models.department import Department
+from app.models.major import Major
+from app.models.certificate import Certificate
 from app.models.ai_analysis import AIAnalysis
 from app.models.weekly_report import WeeklyReport
 
@@ -39,6 +41,10 @@ __all__ = [
     'User',
     # 部门模型
     'Department',
+    # 专业模型
+    'Major',
+    # 证书模型
+    'Certificate',
     # AI分析模型
     'AIAnalysis',
     # 周报模型
